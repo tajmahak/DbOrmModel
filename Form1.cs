@@ -94,7 +94,7 @@ namespace DbOrmModel
         }
         private void CreateText(DBModelBase model)
         {
-            string s1 = "\\\"", s2 = "\\\"";
+            string s1 = "", s2 = ""; // сепараторы названий сущности таблицы (убраны для совместимости с другими БД)
 
             var strUsing = new StringBuilder();
             #region
