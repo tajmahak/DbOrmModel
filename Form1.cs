@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using DBSetExtension;
@@ -25,25 +24,26 @@ namespace DbOrmModel
                 return;
             Open(path[0]);
         }
-        private void richTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void textBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.C)
             {
                 e.Handled = e.SuppressKeyPress = true;
-                CopyToClipboard(((RichTextBox)sender).Text);
+                CopyToClipboard(((TextBox)sender).Text);
             }
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            CopyToClipboard(richTextBox1.Text);
+            CopyToClipboard(textBox1.Text);
         }
         private void button3_Click(object sender, EventArgs e)
         {
-            CopyToClipboard(richTextBox2.Text);
+            CopyToClipboard(textBox2.Text);
         }
         private void button4_Click(object sender, EventArgs e)
         {
-            CopyToClipboard(richTextBox3.Text);
+
+            CopyToClipboard(textBox3.Text);
         }
 
         private void Open(string path)
@@ -94,16 +94,18 @@ namespace DbOrmModel
         }
         private void CreateText(DBModelBase model)
         {
+            string s1 = "\\\"", s2 = "\\\"";
+
             var strUsing = new StringBuilder();
             #region
 
             strUsing.Line(0, "using System;");
-            strUsing.Line(0, "using DBSetExtension;");
+            strUsing.Line(0, "using MyLibrary.DataBase;");
 
             #endregion
 
             var strDB = new StringBuilder();
-            #region текст 1
+            #region
 
             strDB.Line(0, "namespace DB");
             strDB.AppendLine("{");
@@ -115,7 +117,7 @@ namespace DbOrmModel
                 strDB.Line(1, "public static class " + table.Name);
                 strDB.Line(1, "{");
 
-                strDB.Line(2, "public const string _ = \"{0}\";", table.Name);
+                strDB.Line(2, "public const string _ = \"{1}{0}{2}\";", table.Name, s1, s2);
                 for (int j = 0; j < table.Columns.Length; j++)
                 {
                     var column = table.Columns[j];
@@ -124,7 +126,7 @@ namespace DbOrmModel
                     if (fieldName.StartsWith(table.Name))
                         fieldName = fieldName.Remove(0, table.Name.Length + 1);
 
-                    strDB.Line(2, @"public const string {0} = ""{1}.{2}"";", fieldName, table.Name, column.Name);
+                    strDB.Line(2, "public const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", fieldName, table.Name, column.Name, s1, s2);
                 }
                 strDB.Line(1, "}");
                 strDB.Line(1, "#endregion");
@@ -134,7 +136,7 @@ namespace DbOrmModel
             #endregion
 
             var strORM = new StringBuilder();
-            #region текст 2
+            #region
 
             strORM.Line(0, "namespace ORM");
             strORM.AppendLine("{");
@@ -156,7 +158,7 @@ namespace DbOrmModel
                     if (fieldName.StartsWith(table.Name))
                         fieldName = fieldName.Remove(0, table.Name.Length + 1);
 
-                    var constName = "_" + fieldName.ToLower();
+                    var constName = "__" + fieldName.ToLower();
 
                     string objectType;
                     #region выбор типа объекта
@@ -185,14 +187,14 @@ namespace DbOrmModel
 
                     strORM.AppendLine();
 
-                    strORM.Line(2, @"private const string {0} = ""{1}.{2}"";", constName, table.Name, column.Name);
+                    strORM.Line(2, "private const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", constName, table.Name, column.Name, s1, s2);
 
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
                     string setText = "Row.SetNotNull(" + constName + ", value);";
                     strORM.LineProperty(2, propertyText, getText, setText);
 
-                    propertyText = "public object " + fieldName + "_Obj";
+                    propertyText = "public object _" + fieldName;
                     getText = "return Row[" + constName + "];";
                     setText = "Row.SetNotNull(" + constName + ", value);";
                     strORM.LineProperty(2, propertyText, getText, setText);
@@ -213,148 +215,34 @@ namespace DbOrmModel
 
             #endregion
 
+
             #region Заполнение текстбоксов
 
-            richTextBox1.Clear();
-            richTextBox2.Clear();
-            richTextBox3.Clear();
+            textBox1.Clear();
+            textBox2.Clear();
+            textBox3.Clear();
 
-            richTextBox1.Text = strDB.ToString();
-            SetColor(richTextBox1);
+            textBox1.Text = strDB.ToString();
 
             var str = new StringBuilder();
             str.AppendLine(strUsing.ToString());
             str.AppendLine(strORM.ToString());
-            richTextBox2.Text = str.ToString();
-            SetColor(richTextBox2);
+            textBox2.Text = str.ToString();
 
             str = new StringBuilder();
             str.AppendLine(strUsing.ToString());
             str.AppendLine(strDB.ToString());
             str.AppendLine(strORM.ToString());
-            richTextBox3.Text = str.ToString();
-            SetColor(richTextBox3);
+            textBox3.Text = str.ToString();
 
             #endregion
         }
         private void CopyToClipboard(string text)
         {
-            text = text.Replace("\n", "\r\n");
             if (text.Length == 0)
                 return;
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
-
-        #region Изменение цвета
-
-        private void SetColor(RichTextBox richTextBox)
-        {
-            ChangeColor_Name(richTextBox, "using", color1);
-            ChangeColor_Name(richTextBox, "#region", color1);
-            ChangeColor_Name(richTextBox, "#endregion", color1);
-            ChangeColor_Name(richTextBox, "public", color1);
-            ChangeColor_Name(richTextBox, "private", color1);
-            ChangeColor_Name(richTextBox, "const", color1);
-            ChangeColor_Name(richTextBox, "object", color1);
-            ChangeColor_Name(richTextBox, "string", color1);
-            ChangeColor_Name(richTextBox, "byte", color1);
-            ChangeColor_Name(richTextBox, "get", color1);
-            ChangeColor_Name(richTextBox, "set", color1);
-            ChangeColor_Name(richTextBox, "static", color1);
-            ChangeColor_Name(richTextBox, "class", color1);
-            ChangeColor_Name(richTextBox, "namespace", color1);
-            ChangeColor_Name(richTextBox, "value", color1);
-
-            ChangeColor_Name(richTextBox, "Nullable", color2);
-            ChangeColor_Name(richTextBox, typeof(IOrmTable).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(string).Name, color2);
-
-            ChangeColor_Name(richTextBox, typeof(bool).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(byte).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(byte).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(short).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(ushort).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(int).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(uint).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(long).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(ulong).Name, color2);
-
-            ChangeColor_Name(richTextBox, typeof(float).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(double).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(decimal).Name, color2);
-
-            ChangeColor_Name(richTextBox, typeof(DateTime).Name, color2);
-            ChangeColor_Name(richTextBox, typeof(TimeSpan).Name, color2);
-
-            ChangeColor_String(richTextBox, color3);
-            ChangeColor_ClassName(richTextBox, color2);
-        }
-
-        private void ChangeColor_Name(RichTextBox richTextBox, string name, Color color)
-        {
-            ProcessChangeColor(richTextBox, color, (text, startIndex) =>
-            {
-                int index = text.IndexOf(name, startIndex);
-                int length = name.Length;
-                return new object[] { index, length };
-            });
-        }
-        private void ChangeColor_String(RichTextBox richTextBox, Color color)
-        {
-            ProcessChangeColor(richTextBox, color, (text, startIndex) =>
-            {
-                int index1 = text.IndexOf("\"", startIndex);
-                if (index1 == -1)
-                    return new object[] { index1 };
-
-                int index2 = text.IndexOf("\"", index1 + 1);
-                return new object[] { index1, index2 - index1 + 1 };
-            });
-        }
-        private void ChangeColor_ClassName(RichTextBox richTextBox, Color color)
-        {
-            ProcessChangeColor(richTextBox, color, (text, startIndex) =>
-            {
-                int index1 = text.IndexOf("class ", startIndex);
-                if (index1 == -1)
-                    return new object[] { index1 };
-
-                int index2 = text.IndexOf(" ", index1 + 6);
-                int index2_1 = text.IndexOf(":", index1 + 6);
-                if (index2_1 != -1 && index2_1 < index2)
-                    index2 = index2_1 + 1;
-                index2--;
-
-                return new object[] { index1 + 6, index2 - index1 - 6 };
-            });
-        }
-
-        private void ProcessChangeColor(RichTextBox richTextBox, Color color, Func<string, int, object[]> func)
-        {
-            string text = richTextBox.Text.Replace("\r\n", "\n");
-            int startIndex = 0;
-            while (true)
-            {
-                object[] result = func(text, startIndex);
-                int index = (int)result[0];
-
-                if (index == -1)
-                    break;
-
-                int length = (int)result[1];
-                startIndex = index + length;
-
-                richTextBox.Select(index, length);
-                richTextBox.SelectionColor = color;
-            }
-            richTextBox.Select(0, 0);
-        }
-
-        private Color color1 = Color.FromArgb(0, 0, 255);
-        private Color color2 = Color.FromArgb(43, 171, 212);
-        private Color color3 = Color.FromArgb(163, 21, 21);
-
-        #endregion
     }
     public static class StringBuilderExtension
     {
