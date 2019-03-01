@@ -35,6 +35,8 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
+            this.checkBoxUseComments = new System.Windows.Forms.CheckBox();
+            this.labelComment = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -73,6 +75,9 @@
             // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33332F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
@@ -83,14 +88,13 @@
             this.tableLayoutPanel1.Controls.Add(this.textBox1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.textBox2, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.textBox3, 2, 1);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 45F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(956, 505);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(956, 473);
             this.tableLayoutPanel1.TabIndex = 9;
             // 
             // textBox1
@@ -104,7 +108,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(312, 454);
+            this.textBox1.Size = new System.Drawing.Size(312, 422);
             this.textBox1.TabIndex = 9;
             this.textBox1.WordWrap = false;
             // 
@@ -119,7 +123,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(312, 454);
+            this.textBox2.Size = new System.Drawing.Size(312, 422);
             this.textBox2.TabIndex = 10;
             this.textBox2.WordWrap = false;
             // 
@@ -134,9 +138,36 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
             this.textBox3.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox3.Size = new System.Drawing.Size(314, 454);
+            this.textBox3.Size = new System.Drawing.Size(314, 422);
             this.textBox3.TabIndex = 11;
             this.textBox3.WordWrap = false;
+            // 
+            // checkBoxUseComments
+            // 
+            this.checkBoxUseComments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.checkBoxUseComments.AutoSize = true;
+            this.checkBoxUseComments.Checked = true;
+            this.checkBoxUseComments.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxUseComments.Location = new System.Drawing.Point(12, 479);
+            this.checkBoxUseComments.Name = "checkBoxUseComments";
+            this.checkBoxUseComments.Size = new System.Drawing.Size(171, 17);
+            this.checkBoxUseComments.TabIndex = 12;
+            this.checkBoxUseComments.Text = "Использовать комментарии";
+            this.checkBoxUseComments.UseVisualStyleBackColor = true;
+            this.checkBoxUseComments.CheckedChanged += new System.EventHandler(this.checkBoxUseComments_CheckedChanged);
+            // 
+            // labelComment
+            // 
+            this.labelComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelComment.AutoSize = true;
+            this.labelComment.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelComment.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.labelComment.Location = new System.Drawing.Point(736, 480);
+            this.labelComment.Name = "labelComment";
+            this.labelComment.Size = new System.Drawing.Size(208, 13);
+            this.labelComment.TabIndex = 13;
+            this.labelComment.Text = "Создать/обновить файл комментариев";
+            this.labelComment.Click += new System.EventHandler(this.labelComment_Click);
             // 
             // Form1
             // 
@@ -144,6 +175,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(956, 505);
+            this.Controls.Add(this.labelComment);
+            this.Controls.Add(this.checkBoxUseComments);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "Form1";
             this.ShowIcon = false;
@@ -154,6 +187,7 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -166,6 +200,8 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.CheckBox checkBoxUseComments;
+        private System.Windows.Forms.Label labelComment;
     }
 }
 

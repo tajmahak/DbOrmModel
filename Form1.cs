@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using DBSetExtension;
@@ -9,8 +11,22 @@ namespace DbOrmModel
 {
     public partial class Form1 : Form
     {
+        private DBModelBase _currentModel;
+        private string _dbPath;
+        private Dictionary<string, string> _commentDictionary;
+        private string CommentPath
+        {
+            get
+            {
+                if (_dbPath == null)
+                    return null;
+                return _dbPath + ".comment.txt";
+            }
+        }
+
         public Form1()
         {
+            _commentDictionary = new Dictionary<string, string>();
             InitializeComponent();
         }
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -42,21 +58,36 @@ namespace DbOrmModel
         }
         private void button4_Click(object sender, EventArgs e)
         {
-
             CopyToClipboard(textBox3.Text);
+        }
+        private void labelComment_Click(object sender, EventArgs e)
+        {
+            PrepareCommentFile();
+            MessageBox.Show("Готово.");
+        }
+        private void checkBoxUseComments_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_dbPath != null)
+                Open(_dbPath);
         }
 
         private void Open(string path)
         {
+            _dbPath = path;
             DbConnection connection = null;
             try
             {
                 path = path.Trim('\"');
                 connection = CreateDataBaseConnection(path);
-                var model = new DBModelFireBird();
-                model.Initialize(connection);
+                _currentModel = new DBModelFireBird();
+                _currentModel.Initialize(connection);
                 connection.Dispose();
-                CreateText(model);
+
+                if (checkBoxUseComments.Checked)
+                {
+                    PrepareCommentDictionary();
+                }
+                CreateText(_currentModel, checkBoxUseComments.Checked);
             }
             catch (Exception ex)
             {
@@ -92,17 +123,10 @@ namespace DbOrmModel
             }
             return connection;
         }
-        private void CreateText(DBModelBase model)
+        private void CreateText(DBModelBase model, bool useCommentDictionary)
         {
             string s1 = "", s2 = ""; // сепараторы названий сущности таблицы (убраны для совместимости с другими БД)
-
-            var strUsing = new StringBuilder();
-            #region
-
-            strUsing.Line(0, "using System;");
-            strUsing.Line(0, "using MyLibrary.DataBase;");
-
-            #endregion
+            string comment;
 
             var strDB = new StringBuilder();
             #region
@@ -114,6 +138,13 @@ namespace DbOrmModel
             {
                 var table = model.Tables[i];
                 strDB.Line(1, "#region " + table.Name);
+
+                if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name, out comment))
+                {
+                    strDB.Line(1, "/// <summary>");
+                    strDB.Line(1, "/// " + comment);
+                    strDB.Line(1, "/// </summary>");
+                }
                 strDB.Line(1, "public static class " + table.Name);
                 strDB.Line(1, "{");
 
@@ -126,6 +157,12 @@ namespace DbOrmModel
                     if (fieldName.StartsWith(table.Name))
                         fieldName = fieldName.Remove(0, table.Name.Length + 1);
 
+                    if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name + "." + column.Name, out comment))
+                    {
+                        strDB.Line(2, "/// <summary>");
+                        strDB.Line(2, "/// " + comment);
+                        strDB.Line(2, "/// </summary>");
+                    }
                     strDB.Line(2, "public const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", fieldName, table.Name, column.Name, s1, s2);
                 }
                 strDB.Line(1, "}");
@@ -141,11 +178,22 @@ namespace DbOrmModel
             strORM.Line(0, "namespace ORM");
             strORM.AppendLine("{");
 
+            strORM.Line(1, "using System;");
+            strORM.Line(1, "using MyLibrary.DataBase;");
+            strORM.Line(1, "using MyLibrary.DataBase.Orm;");
+            strORM.AppendLine();
+
             for (int i = 0; i < model.Tables.Length; i++)
             {
                 var table = model.Tables[i];
                 strORM.Line(1, "#region " + table.Name);
-                strORM.Line(1, "public class " + table.Name + ": IOrmTable");
+                if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name, out comment))
+                {
+                    strORM.Line(1, "/// <summary>");
+                    strORM.Line(1, "/// " + comment);
+                    strORM.Line(1, "/// </summary>");
+                }
+                strORM.Line(1, "public class " + table.Name + ": DBOrmTableBase");
                 strORM.Line(1, "{");
 
                 strORM.LineProperty(2, "public string _", "return Row.Table.Name;", null);
@@ -189,20 +237,32 @@ namespace DbOrmModel
 
                     strORM.Line(2, "private const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", constName, table.Name, column.Name, s1, s2);
 
+                    if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name + "." + column.Name, out comment))
+                    {
+                        strORM.Line(2, "/// <summary>");
+                        strORM.Line(2, "/// " + comment);
+                        strORM.Line(2, "/// </summary>");
+                    }
+                    strORM.Line(2, "[DBOrmColumn(" + constName + ")]");
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
                     string setText = "Row.SetNotNull(" + constName + ", value);";
                     strORM.LineProperty(2, propertyText, getText, setText);
 
+                    if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name + "." + column.Name, out comment))
+                    {
+                        strORM.Line(2, "/// <summary>");
+                        strORM.Line(2, "/// " + comment);
+                        strORM.Line(2, "/// </summary>");
+                    }
                     propertyText = "public object _" + fieldName;
                     getText = "return Row[" + constName + "];";
                     setText = "Row.SetNotNull(" + constName + ", value);";
                     strORM.LineProperty(2, propertyText, getText, setText);
                 }
 
-
                 strORM.AppendLine();
-                strORM.Line(2, "public DBRow Row { get; set; }");
+
                 strORM.Line(2, "public " + table.Name + "(DBRow row)");
                 strORM.Line(2, "{");
                 strORM.Line(3, "Row = row;");
@@ -215,7 +275,6 @@ namespace DbOrmModel
 
             #endregion
 
-
             #region Заполнение текстбоксов
 
             textBox1.Clear();
@@ -225,14 +284,12 @@ namespace DbOrmModel
             textBox1.Text = strDB.ToString();
 
             var str = new StringBuilder();
-            str.AppendLine(strUsing.ToString());
-            str.AppendLine(strORM.ToString());
+            str.Append(strORM.ToString());
             textBox2.Text = str.ToString();
 
             str = new StringBuilder();
-            str.AppendLine(strUsing.ToString());
             str.AppendLine(strDB.ToString());
-            str.AppendLine(strORM.ToString());
+            str.Append(strORM.ToString());
             textBox3.Text = str.ToString();
 
             #endregion
@@ -242,6 +299,59 @@ namespace DbOrmModel
             if (text.Length == 0)
                 return;
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
+        }
+        private void PrepareCommentDictionary()
+        {
+            _commentDictionary.Clear();
+            if (!File.Exists(CommentPath))
+                return;
+
+            foreach (var line in File.ReadAllLines(CommentPath))
+            {
+                string[] split = line.Split('\t');
+                if (split.Length != 2)
+                    continue;
+
+                var text1 = split[0].Trim();
+                var text2 = split[1].Trim();
+                if (text2.Length == 0)
+                    continue;
+
+                _commentDictionary.Add(text1, text2);
+            }
+        }
+        private void PrepareCommentFile()
+        {
+            PrepareCommentDictionary();
+
+            string comment;
+
+            var text = new StringBuilder();
+            foreach (var table in _currentModel.Tables)
+            {
+                text.AppendLine();
+                text.Append(table.Name + "\t");
+                if (_commentDictionary.TryGetValue(table.Name, out comment))
+                {
+                    text.Append(comment);
+                }
+                text.AppendLine();
+
+                foreach (var column in table.Columns)
+                {
+                    var columnName = table.Name + "." + column.Name;
+                    text.Append(columnName + "\t");
+                    if (_commentDictionary.TryGetValue(columnName, out comment))
+                    {
+                        text.Append(comment);
+                    }
+                    text.AppendLine();
+                }
+            }
+            text.Remove(0, 2); // убирает первую строку
+
+            File.Delete(CommentPath);
+            File.WriteAllText(CommentPath, text.ToString(), Encoding.UTF8);
         }
     }
     public static class StringBuilderExtension
