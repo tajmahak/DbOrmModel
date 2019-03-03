@@ -307,7 +307,7 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (_userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    if (useUserName && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
                     {
                         fieldName = _userNamesDictionary[table.Name + "." + column.Name];
                     }
@@ -363,7 +363,7 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (_userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    if (useUserName && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
                     {
                         fieldName = _userNamesDictionary[table.Name + "." + column.Name];
                     }
