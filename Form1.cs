@@ -309,7 +309,6 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-
                     if (_userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
                     {
                         fieldName = _userNamesDictionary[table.Name + "." + column.Name];
@@ -351,7 +350,12 @@ namespace DbOrmModel
                 {
                     strORM.LineComment(1, comment);
                 }
-                strORM.Line(1, "public class " + table.Name + ": DBOrmTableBase");
+
+                var tableName = table.Name;
+                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
+                    tableName = _userNamesDictionary[tableName];
+
+                strORM.Line(1, "public class " + tableName + ": DBOrmTableBase");
                 strORM.Line(1, "{");
 
                 strORM.LineProperty(2, "public string _", "return Row.Table.Name;", null);
@@ -361,11 +365,19 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (fieldName.StartsWith(table.Name))
-                        fieldName = fieldName.Remove(0, table.Name.Length + 1);
+                    if (_userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    {
+                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
+                    }
+                    else
+                    {
+                        if (fieldName.StartsWith(table.Name))
+                        {
+                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
+                        }
+                    }
 
                     var constName = "__" + fieldName.ToLower();
-
 
                     strORM.AppendLine();
 
@@ -373,7 +385,9 @@ namespace DbOrmModel
 
                     InsertComment(strORM, 2, column, false);
                     string objectType = GetObjectType(column, true);
+                    
                     strORM.Line(2, "[DBOrmColumn(" + constName + ")]");
+                   
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
                     string setText = "Row.SetNotNull(" + constName + ", value);";
@@ -388,7 +402,7 @@ namespace DbOrmModel
 
                 strORM.AppendLine();
 
-                strORM.Line(2, "public " + table.Name + "(DBRow row)");
+                strORM.Line(2, "public " + tableName + "(DBRow row)");
                 strORM.Line(2, "{");
                 strORM.Line(3, "Row = row;");
                 strORM.Line(2, "}");
