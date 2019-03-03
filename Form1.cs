@@ -19,8 +19,6 @@ namespace DbOrmModel
             _commentDictionary = new Dictionary<string, string>();
             _userNamesDictionary = new Dictionary<string, string>();
             InitializeComponent();
-
-            Open(@"C:\Users\Admin\Desktop\garage_conv\bin\Debug\db\GARAGE_EMPTY.FDB");
         }
         private void Form1_DragEnter(object sender, DragEventArgs e)
         {
