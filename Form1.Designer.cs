@@ -37,6 +37,8 @@
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.checkBoxUseComments = new System.Windows.Forms.CheckBox();
             this.labelComment = new System.Windows.Forms.Label();
+            this.labelUserName = new System.Windows.Forms.Label();
+            this.checkBoxUseUserNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,7 +96,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 45F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(956, 473);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(956, 447);
             this.tableLayoutPanel1.TabIndex = 9;
             // 
             // textBox1
@@ -108,7 +110,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(312, 422);
+            this.textBox1.Size = new System.Drawing.Size(312, 396);
             this.textBox1.TabIndex = 9;
             this.textBox1.WordWrap = false;
             // 
@@ -123,7 +125,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(312, 422);
+            this.textBox2.Size = new System.Drawing.Size(312, 396);
             this.textBox2.TabIndex = 10;
             this.textBox2.WordWrap = false;
             // 
@@ -138,7 +140,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
             this.textBox3.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox3.Size = new System.Drawing.Size(314, 422);
+            this.textBox3.Size = new System.Drawing.Size(314, 396);
             this.textBox3.TabIndex = 11;
             this.textBox3.WordWrap = false;
             // 
@@ -148,7 +150,7 @@
             this.checkBoxUseComments.AutoSize = true;
             this.checkBoxUseComments.Checked = true;
             this.checkBoxUseComments.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUseComments.Location = new System.Drawing.Point(12, 479);
+            this.checkBoxUseComments.Location = new System.Drawing.Point(12, 453);
             this.checkBoxUseComments.Name = "checkBoxUseComments";
             this.checkBoxUseComments.Size = new System.Drawing.Size(171, 17);
             this.checkBoxUseComments.TabIndex = 12;
@@ -158,16 +160,43 @@
             // 
             // labelComment
             // 
-            this.labelComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelComment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelComment.AutoSize = true;
             this.labelComment.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelComment.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.labelComment.Location = new System.Drawing.Point(736, 480);
+            this.labelComment.Location = new System.Drawing.Point(189, 454);
             this.labelComment.Name = "labelComment";
             this.labelComment.Size = new System.Drawing.Size(208, 13);
             this.labelComment.TabIndex = 13;
             this.labelComment.Text = "Создать/обновить файл комментариев";
             this.labelComment.Click += new System.EventHandler(this.labelComment_Click);
+            // 
+            // labelUserName
+            // 
+            this.labelUserName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelUserName.AutoSize = true;
+            this.labelUserName.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelUserName.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.labelUserName.Location = new System.Drawing.Point(189, 477);
+            this.labelUserName.Name = "labelUserName";
+            this.labelUserName.Size = new System.Drawing.Size(195, 13);
+            this.labelUserName.TabIndex = 15;
+            this.labelUserName.Text = "Создать/обновить файл польз. имён";
+            this.labelUserName.Click += new System.EventHandler(this.labelUserName_Click);
+            // 
+            // checkBoxUseUserNames
+            // 
+            this.checkBoxUseUserNames.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.checkBoxUseUserNames.AutoSize = true;
+            this.checkBoxUseUserNames.Checked = true;
+            this.checkBoxUseUserNames.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxUseUserNames.Location = new System.Drawing.Point(12, 476);
+            this.checkBoxUseUserNames.Name = "checkBoxUseUserNames";
+            this.checkBoxUseUserNames.Size = new System.Drawing.Size(170, 17);
+            this.checkBoxUseUserNames.TabIndex = 14;
+            this.checkBoxUseUserNames.Text = "Использовать польз. имена";
+            this.checkBoxUseUserNames.UseVisualStyleBackColor = true;
+            this.checkBoxUseUserNames.CheckedChanged += new System.EventHandler(this.checkBoxUseUserNames_CheckedChanged);
             // 
             // Form1
             // 
@@ -175,6 +204,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(956, 505);
+            this.Controls.Add(this.labelUserName);
+            this.Controls.Add(this.checkBoxUseUserNames);
             this.Controls.Add(this.labelComment);
             this.Controls.Add(this.checkBoxUseComments);
             this.Controls.Add(this.tableLayoutPanel1);
@@ -202,6 +233,8 @@
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.CheckBox checkBoxUseComments;
         private System.Windows.Forms.Label labelComment;
+        private System.Windows.Forms.Label labelUserName;
+        private System.Windows.Forms.CheckBox checkBoxUseUserNames;
     }
 }
 
