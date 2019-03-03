@@ -19,6 +19,8 @@ namespace DbOrmModel
             _commentDictionary = new Dictionary<string, string>();
             _userNamesDictionary = new Dictionary<string, string>();
             InitializeComponent();
+
+            Open(@"C:\Users\Admin\Desktop\garage_conv\bin\Debug\db\GARAGE_EMPTY.FDB");
         }
         private void Form1_DragEnter(object sender, DragEventArgs e)
         {
@@ -150,11 +152,71 @@ namespace DbOrmModel
         }
         private void PrepareUserNamesFile()
         {
+            PrepareUserNamesDictionary();
 
+            string userName;
+
+            var text = new StringBuilder();
+            foreach (var table in _currentModel.Tables)
+            {
+                text.AppendLine();
+                text.Append(table.Name + "\t");
+
+                if (_userNamesDictionary.TryGetValue(table.Name, out userName))
+                {
+                    text.Append(userName);
+                }
+                else
+                {
+                    text.Append(table.Name);
+                }
+
+                text.AppendLine();
+
+                foreach (var column in table.Columns)
+                {
+                    var columnName = table.Name + "." + column.Name;
+                    text.Append(columnName + "\t");
+
+                    var fieldName = column.Name;
+                    if (fieldName.StartsWith(table.Name))
+                        fieldName = fieldName.Remove(0, table.Name.Length + 1);
+
+                    if (_userNamesDictionary.TryGetValue(columnName, out userName))
+                    {
+                        text.Append(userName);
+                    }
+                    else
+                    {
+                        text.Append(fieldName);
+                    }
+                    text.AppendLine();
+                }
+            }
+            text.Remove(0, 2); // убирает первую пустую строку
+
+            File.Delete(UserNamesPath);
+            File.WriteAllText(UserNamesPath, text.ToString(), Encoding.UTF8);
         }
         private void PrepareUserNamesDictionary()
         {
+            _userNamesDictionary.Clear();
+            if (!File.Exists(UserNamesPath))
+                return;
 
+            foreach (var line in File.ReadAllLines(UserNamesPath))
+            {
+                string[] split = line.Split('\t');
+                if (split.Length != 2)
+                    continue;
+
+                var text1 = split[0].Trim();
+                var text2 = split[1].Trim();
+                if (text2.Length == 0)
+                    continue;
+
+                _userNamesDictionary.Add(text1, text2);
+            }
         }
 
         private void Open(string path)
@@ -173,7 +235,11 @@ namespace DbOrmModel
                 {
                     PrepareCommentDictionary();
                 }
-                CreateText(_currentModel, checkBoxUseComments.Checked);
+                if (checkBoxUseUserNames.Checked)
+                {
+                    PrepareUserNamesDictionary();
+                }
+                CreateText(_currentModel, checkBoxUseComments.Checked, checkBoxUseUserNames.Checked);
             }
             catch (Exception ex)
             {
@@ -209,7 +275,7 @@ namespace DbOrmModel
             }
             return connection;
         }
-        private void CreateText(DBModelBase model, bool useCommentDictionary)
+        private void CreateText(DBModelBase model, bool useComment, bool useUserName)
         {
             string s1 = "", s2 = ""; // сепараторы названий сущности таблицы (убраны для совместимости с другими БД)
             string comment;
@@ -225,11 +291,16 @@ namespace DbOrmModel
                 var table = model.Tables[i];
                 strDB.Line(1, "#region " + table.Name);
 
-                if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name, out comment))
+                if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
                 {
                     strDB.LineComment(1, comment);
                 }
-                strDB.Line(1, "public static class " + table.Name);
+
+                var tableName = table.Name;
+                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
+                    tableName = _userNamesDictionary[tableName];
+
+                strDB.Line(1, "public static class " + tableName);
                 strDB.Line(1, "{");
 
                 strDB.Line(2, "public const string _ = \"{1}{0}{2}\";", table.Name, s1, s2);
@@ -238,8 +309,18 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (fieldName.StartsWith(table.Name))
-                        fieldName = fieldName.Remove(0, table.Name.Length + 1);
+
+                    if (_userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    {
+                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
+                    }
+                    else
+                    {
+                        if (fieldName.StartsWith(table.Name))
+                        {
+                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
+                        }
+                    }
 
                     InsertComment(strDB, 2, column, true);
                     strDB.Line(2, "public const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", fieldName, table.Name, column.Name, s1, s2);
@@ -266,7 +347,7 @@ namespace DbOrmModel
             {
                 var table = model.Tables[i];
                 strORM.Line(1, "#region " + table.Name);
-                if (useCommentDictionary && _commentDictionary.TryGetValue(table.Name, out comment))
+                if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
                 {
                     strORM.LineComment(1, comment);
                 }
