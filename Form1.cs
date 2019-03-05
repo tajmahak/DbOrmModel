@@ -382,10 +382,10 @@ namespace DbOrmModel
                     strORM.Line(2, "private const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", constName, table.Name, column.Name, s1, s2);
 
                     InsertComment(strORM, 2, column, false);
-                    string objectType = GetObjectType(column, true);
-                    
+                    string objectType = GetObjectType(column);
+
                     strORM.Line(2, "[DBOrmColumn(" + constName + ")]");
-                   
+
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
                     string setText = "Row.SetNotNull(" + constName + ", value);";
@@ -437,7 +437,7 @@ namespace DbOrmModel
                 return;
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
-        private string GetObjectType(DBColumn column, bool fullType)
+        private string GetObjectType(DBColumn column)
         {
             string objectType;
             if (column.Comment != null)
@@ -457,14 +457,52 @@ namespace DbOrmModel
             }
             if (column.AllowDBNull && !column.DataType.IsClass)
             {
-                if (fullType)
+                objectType = "Nullable<" + objectType + ">";
+            }
+            return objectType;
+        }
+        private string GetCommentObjectType(DBColumn column)
+        {
+            string objectType;
+            if (column.Comment != null)
+            {
+                if (column.Comment == "BOOLEAN")
                 {
-                    objectType = "Nullable<" + objectType + ">";
+                    objectType = typeof(bool).Name;
                 }
                 else
                 {
-                    objectType += "?";
+                    objectType = column.Comment;
                 }
+            }
+            else
+            {
+                objectType = column.DataType.Name;
+            }
+
+            switch (objectType)
+            {
+                case "Boolean": objectType = "bool"; break;
+                case "Char": objectType = "char"; break;
+                case "String": objectType = "string"; break;
+
+                case "Byte": objectType = "byte"; break;
+                case "SByte": objectType = "sbyte"; break;
+                case "Int16": objectType = "short"; break;
+                case "UInt16": objectType = "ushort"; break;
+                case "Int32": objectType = "int"; break;
+                case "UInt32": objectType = "uint"; break;
+                case "Int64": objectType = "long"; break;
+                case "UInt64": objectType = "ulong"; break;
+
+                case "Single": objectType = "float"; break;
+                case "Double": objectType = "double"; break;
+                case "Decimal": objectType = "decimal"; break;
+            }
+
+            if (column.AllowDBNull)
+            {
+                objectType += "?";
             }
             return objectType;
         }
@@ -481,7 +519,7 @@ namespace DbOrmModel
             }
             if (insertTypeName)
             {
-                comment += " [" + GetObjectType(column, false) + "]";
+                comment += " [" + GetCommentObjectType(column) + "]";
             }
             if (comment.Length > 0)
             {
