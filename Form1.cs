@@ -226,62 +226,6 @@ namespace DbOrmModel
             }
         }
 
-        private void Open(string path)
-        {
-            _dbPath = path;
-            DbConnection connection = null;
-            try
-            {
-                path = path.Trim('\"');
-                connection = CreateDataBaseConnection(path);
-                _currentModel = new DBModelFireBird();
-                _currentModel.Initialize(connection);
-                connection.Dispose();
-
-                if (checkBoxUseComments.Checked)
-                {
-                    PrepareCommentDictionary();
-                }
-                if (checkBoxUseUserNames.Checked)
-                {
-                    PrepareUserNamesDictionary();
-                }
-                CreateText(_currentModel, checkBoxUseComments.Checked, checkBoxUseUserNames.Checked);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            finally
-            {
-                if (connection != null)
-                    connection.Dispose();
-            }
-        }
-        private DbConnection CreateDataBaseConnection(string path)
-        {
-            var conBuilder = new FbConnectionStringBuilder();
-            conBuilder.Dialect = 3;
-            conBuilder.UserID = "SYSDBA";
-            conBuilder.Password = "masterkey";
-            conBuilder.Charset = "WIN1251";
-
-            conBuilder.ServerType = FbServerType.Default;
-            conBuilder.DataSource = "127.0.0.1";
-            conBuilder.Database = path;
-            conBuilder.Port = 3050;
-
-            var connection = new FbConnection(conBuilder.ToString());
-            try
-            {
-                connection.Open();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Ошибка подключения к БД: " + ex.Message, ex);
-            }
-            return connection;
-        }
         private void CreateText(DBModelBase model, bool useComment, bool useUserName)
         {
             string s1 = "", s2 = ""; // сепараторы названий сущности таблицы (убраны для совместимости с другими БД)
@@ -296,16 +240,17 @@ namespace DbOrmModel
             for (int i = 0; i < model.Tables.Length; i++)
             {
                 var table = model.Tables[i];
-                strDB.Line(1, "#region " + table.Name);
+
+                var tableName = table.Name;
+                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
+                    tableName = _userNamesDictionary[tableName];
+
+                strDB.Line(1, "#region " + tableName);
 
                 if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
                 {
                     strDB.LineComment(1, comment);
                 }
-
-                var tableName = table.Name;
-                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
 
                 strDB.Line(1, "public static class " + tableName);
                 strDB.Line(1, "{");
@@ -352,15 +297,16 @@ namespace DbOrmModel
             for (int i = 0; i < model.Tables.Length; i++)
             {
                 var table = model.Tables[i];
-                strORM.Line(1, "#region " + table.Name);
+                
+                var tableName = table.Name;
+                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
+                    tableName = _userNamesDictionary[tableName];
+
+                strORM.Line(1, "#region " + tableName);
                 if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
                 {
                     strORM.LineComment(1, comment);
                 }
-
-                var tableName = table.Name;
-                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
 
                 strORM.Line(1, "public class " + tableName + ": DBOrmTableBase");
                 strORM.Line(1, "{");
@@ -439,6 +385,62 @@ namespace DbOrmModel
             textBox3.Text = str.ToString();
 
             #endregion
+        }
+        private void Open(string path)
+        {
+            _dbPath = path;
+            DbConnection connection = null;
+            try
+            {
+                path = path.Trim('\"');
+                connection = CreateDataBaseConnection(path);
+                _currentModel = new DBModelFireBird();
+                _currentModel.Initialize(connection);
+                connection.Dispose();
+
+                if (checkBoxUseComments.Checked)
+                {
+                    PrepareCommentDictionary();
+                }
+                if (checkBoxUseUserNames.Checked)
+                {
+                    PrepareUserNamesDictionary();
+                }
+                CreateText(_currentModel, checkBoxUseComments.Checked, checkBoxUseUserNames.Checked);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                    connection.Dispose();
+            }
+        }
+        private DbConnection CreateDataBaseConnection(string path)
+        {
+            var conBuilder = new FbConnectionStringBuilder();
+            conBuilder.Dialect = 3;
+            conBuilder.UserID = "SYSDBA";
+            conBuilder.Password = "masterkey";
+            conBuilder.Charset = "WIN1251";
+
+            conBuilder.ServerType = FbServerType.Default;
+            conBuilder.DataSource = "127.0.0.1";
+            conBuilder.Database = path;
+            conBuilder.Port = 3050;
+
+            var connection = new FbConnection(conBuilder.ToString());
+            try
+            {
+                connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка подключения к БД: " + ex.Message, ex);
+            }
+            return connection;
         }
         private void CopyToClipboard(string text)
         {
@@ -535,7 +537,6 @@ namespace DbOrmModel
                 str.LineComment(level, comment);
             }
         }
-
     }
     public static class StringBuilderExtension
     {
