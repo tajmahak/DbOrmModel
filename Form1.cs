@@ -13,12 +13,21 @@ namespace DbOrmModel
     {
         private DBModelBase _currentModel;
         private string _dbPath;
+        private string[] _args;
 
-        public Form1()
+        public Form1(string[] args)
         {
+            _args = args;
             _commentDictionary = new Dictionary<string, string>();
             _userNamesDictionary = new Dictionary<string, string>();
             InitializeComponent();
+        }
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            if (_args.Length > 0 && File.Exists(_args[0]))
+            {
+                Open(_args[0]);
+            }
         }
         private void Form1_DragEnter(object sender, DragEventArgs e)
         {
@@ -526,6 +535,7 @@ namespace DbOrmModel
                 str.LineComment(level, comment);
             }
         }
+
     }
     public static class StringBuilderExtension
     {
