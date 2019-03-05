@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace DBSetExtension
+namespace MyLibrary.DataBase
 {
-    public class DBColumn
+    public sealed class DBColumn
     {
         public string Name { get; set; }
         public Type DataType { get; set; }

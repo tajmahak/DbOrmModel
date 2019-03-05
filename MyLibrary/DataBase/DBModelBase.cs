@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 
-namespace DBSetExtension
+namespace MyLibrary.DataBase
 {
     public abstract class DBModelBase
     {
@@ -12,8 +11,8 @@ namespace DBSetExtension
         protected internal Dictionary<DBTable, string> DefaultInsertCommandsDict { get; private set; }
         protected internal Dictionary<DBTable, string> DefaultUpdateCommandsDict { get; private set; }
         protected internal Dictionary<DBTable, string> DefaultDeleteCommandsDict { get; private set; }
-        protected Dictionary<string, DBTable> TablesDict { get; private set; }
-        protected Dictionary<string, DBColumn> ColumnsDict { get; private set; }
+        protected internal Dictionary<string, DBTable> TablesDict { get; private set; }
+        protected internal Dictionary<string, DBColumn> ColumnsDict { get; private set; }
 
         public DBModelBase()
         {
@@ -30,38 +29,30 @@ namespace DBSetExtension
         public abstract object ExecuteInsertCommand(DbCommand command);
         public abstract DbCommand BuildCommand(DbConnection connection, DBCommand command);
 
-        public DBSet CreateDBSet(DbConnection connection)
+        public DBContext CreateDBContext(DbConnection connection)
         {
-            return new DBSet(this, connection);
+            var context = new DBContext(this, connection);
+            return context;
+        }
+        public DBCommand CreateDBCommand(string tableName)
+        {
+            var table = GetTable(tableName);
+            var cmd = new DBCommand(table);
+            return cmd;
         }
         public DBTable GetTable(string tableName)
         {
             DBTable table;
             if (!TablesDict.TryGetValue(tableName, out table))
-                throw DBSetException.UnknownTable(tableName);
+                throw DBInternal.UnknownTableException(tableName);
             return table;
         }
         public DBColumn GetColumn(string columnName)
         {
             DBColumn column;
             if (!ColumnsDict.TryGetValue(columnName, out column))
-                throw DBSetException.UnknownColumn(null, columnName);
-            return ColumnsDict[columnName];
-        }
-
-        internal T PackRow<T>(object value)
-        {
-            if (typeof(T) == typeof(DBRow))
-                return (T)value;
-            return (T)Activator.CreateInstance(typeof(T), value);
-        }
-        internal DBRow UnpackRow(object value)
-        {
-            if (value == null)
-                return null;
-            if (value is IOrmTable)
-                return (value as IOrmTable).Row;
-            return (DBRow)value;
+                throw DBInternal.UnknownColumnException(null, columnName);
+            return column;
         }
     }
 }

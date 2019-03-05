@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
-namespace DBSetExtension
+namespace MyLibrary.DataBase
 {
-    public class DBSet : IDisposable
+    public class DBContext : IDisposable
     {
         public DBModelBase Model { get; private set; }
         public DbConnection Connection { get; set; }
         public bool AutoCommit { get; set; }
 
-        public DBSet(DBModelBase model, DbConnection connection)
+        public DBContext(DBModelBase model, DbConnection connection)
         {
             if (!model.IsInitialized)
                 model.Initialize(connection);
@@ -38,8 +38,7 @@ namespace DBSetExtension
 
         public DBCommand Command(string tableName)
         {
-            var table = Model.GetTable(tableName);
-            return new DBCommand(table);
+            return Model.CreateDBCommand(tableName);
         }
         public void CommitTransaction()
         {
@@ -53,15 +52,16 @@ namespace DBSetExtension
         public void Execute(DBCommand cmd)
         {
             if (cmd.CommandType == DBCommand.DBCommandTypeEnum.Select)
-                throw DBSetException.SqlExecute();
+                throw DBInternal.SqlExecuteException();
 
             OpenTransaction();
             try
             {
-                var command = Model.BuildCommand(Connection, cmd);
-                command.Transaction = _transaction;
-                command.ExecuteNonQuery();
-                command.Dispose();
+                using (var command = Model.BuildCommand(Connection, cmd))
+                {
+                    command.Transaction = _transaction;
+                    command.ExecuteNonQuery();
+                }
                 if (AutoCommit)
                     CommitTransaction();
             }
@@ -85,8 +85,8 @@ namespace DBSetExtension
                     var rowCollection = _rowCollectionList[i];
                     if (rowCollection.Count == 0)
                         continue;
-                    var table = rowCollection[0].Table;
 
+                    var table = rowCollection[0].Table;
                     for (int j = 0; j < rowCollection.Count; j++)
                     {
                         row = rowCollection[j];
@@ -157,7 +157,7 @@ namespace DBSetExtension
                     {
                         Guid tempID = (Guid)row[row.Table.PrimaryKeyIndex];
                         object dbID = ExecuteInsertCommand(row);
-                        #region Замена временных ID на присвоенные
+                        #region Замена временных Id на присвоенные
 
                         var list = tempIDs[tempID];
                         for (int j = 0; j < list.Count; j++)
@@ -175,7 +175,7 @@ namespace DBSetExtension
                     else
                     {
                         if (saveError)
-                            throw DBSetException.DbSaveWrongRelations();
+                            throw DBInternal.DbSaveWrongRelationsException();
                         insertRows.Sort((x, y) => x.Value.CompareTo(y.Value));
                         i = -1;
                         saveError = true;
@@ -214,33 +214,28 @@ namespace DBSetExtension
             {
                 RollbackTransaction();
                 Clear();
-                throw DBSetException.DbSave(row, ex);
+                throw DBInternal.DbSaveException(row, ex);
             }
         }
 
-        #region Работа с набором данных
+        #region Работа с коллекцией
 
-        public List<T> GetSetRows<T>(string tableName)
+        public T New<T>(string tableName)
         {
             var table = Model.GetTable(tableName);
-            var rowList = _rowCollectionDict[table];
-
-            var list = new List<T>(rowList.Count);
-            foreach (var row in rowList)
-            {
-                list.Add(Model.PackRow<T>(row));
-            }
-            return list;
+            var row = new DBRow(table);
+            row.InitializeValues();
+            Add(row);
+            return DBInternal.PackRow<T>(row);
         }
-
         public bool Add<T>(T row)
         {
             if (row is IEnumerable)
                 return AddCollection((IEnumerable)row);
 
-            var dbRow = Model.UnpackRow(row);
+            var dbRow = DBInternal.UnpackRow(row);
             if (dbRow.Table.Name == null)
-                throw DBSetException.ProcessRow();
+                throw DBInternal.ProcessRowException();
 
             if (dbRow.State == DataRowState.Deleted)
                 if (dbRow[dbRow.Table.PrimaryKeyIndex] is Guid)
@@ -248,14 +243,16 @@ namespace DBSetExtension
 
             var rowCollection = _rowCollectionDict[dbRow.Table];
             if (!rowCollection.Contains(dbRow))
-                rowCollection.Add(dbRow);
+            {
+                lock (_rowCollectionDict)
+                    rowCollection.Add(dbRow);
+            }
 
             if (dbRow.State == DataRowState.Detached)
                 dbRow.State = DataRowState.Added;
 
             return true;
         }
-
         public void Clear<T>(T row)
         {
             if (row is IEnumerable)
@@ -264,14 +261,15 @@ namespace DBSetExtension
                 return;
             }
 
-            var dbRow = Model.UnpackRow(row);
+            var dbRow = DBInternal.UnpackRow(row);
             if (dbRow.Table.Name == null)
-                throw DBSetException.ProcessRow();
+                throw DBInternal.ProcessRowException();
 
             if (dbRow.State == DataRowState.Added)
                 dbRow.State = DataRowState.Detached;
 
-            _rowCollectionDict[dbRow.Table].Remove(dbRow);
+            lock (_rowCollectionDict)
+                _rowCollectionDict[dbRow.Table].Remove(dbRow);
         }
         public void Clear()
         {
@@ -283,41 +281,45 @@ namespace DBSetExtension
                     if (row.State == DataRowState.Added)
                         row.State = DataRowState.Detached;
                 });
-                rowCollection.Clear();
+
+                lock (_rowCollectionDict)
+                    rowCollection.Clear();
             }
         }
-
         public void Delete<T>(T row)
         {
-            var dbRow = Model.UnpackRow(row);
+            var dbRow = DBInternal.UnpackRow(row);
             if (dbRow.Table.Name == null)
-                throw DBSetException.ProcessRow();
+                throw DBInternal.ProcessRowException();
 
             dbRow.Delete();
 
             if (dbRow[dbRow.Table.PrimaryKeyIndex] is Guid)
-                _rowCollectionDict[dbRow.Table].Remove(dbRow);
+            {
+                lock (_rowCollectionDict)
+                    _rowCollectionDict[dbRow.Table].Remove(dbRow);
+            }
         }
 
-        public bool Exists(DBCommand cmd)
-        {
-            var row = Get(cmd);
-            return (row != null);
-        }
-        public bool Exists(string tableName, params object[] columnNameValuePair)
-        {
-            var cmd = CreateSelectCommand(tableName, columnNameValuePair);
-            return Exists(cmd);
-        }
-
-        public T New<T>(string tableName)
+        public List<T> GetSetRows<T>(string tableName)
         {
             var table = Model.GetTable(tableName);
-            var row = new DBRow(table);
-            row.InitializeValues();
-            Add(row);
-            return Model.PackRow<T>(row);
+            var rowList = _rowCollectionDict[table];
+
+            var list = new List<T>(rowList.Count);
+            foreach (var row in rowList)
+            {
+                list.Add(DBInternal.PackRow<T>(row));
+            }
+            return list;
         }
+        public List<DBRow> GetSetRows(string tableName)
+        {
+            return GetSetRows<DBRow>(tableName);
+        }
+
+        #endregion
+        #region Работа с данными
 
         public T Get<T>(DBCommand cmd)
         {
@@ -349,6 +351,7 @@ namespace DBSetExtension
             var cmd = CreateSelectCommand(tableName, columnNameValuePair);
             var row = GetOrNew(cmd);
 
+            // установка значений в строку согласно аргументов
             if (row.Values[row.Table.PrimaryKeyIndex] is Guid)
             {
                 for (int i = 0; i < columnNameValuePair.Length; i += 2)
@@ -358,13 +361,14 @@ namespace DBSetExtension
                     row[columnName] = value;
                 }
             }
-            return Model.PackRow<T>(row);
+
+            return DBInternal.PackRow<T>(row);
         }
 
         public DBReader<T> Select<T>(DBCommand cmd)
         {
-            if (cmd.CommandType != DBCommand.DBCommandTypeEnum.Select)
-                throw DBSetException.SqlExecute();
+            if (cmd.CommandType != DBCommand.DBCommandTypeEnum.Select && cmd.CommandType != DBCommand.DBCommandTypeEnum.Sql)
+                throw DBInternal.SqlExecuteException();
 
             return new DBReader<T>(Connection, Model, cmd);
         }
@@ -374,60 +378,38 @@ namespace DBSetExtension
             return Select<T>(cmd);
         }
 
-        public T GetValue<T>(string columnName, DBCommand cmd)
+        public T GetValue<T>(DBCommand cmd)
         {
-            if (!cmd.IsView)
-                cmd.Select(columnName);
+            if (cmd.CommandType == DBCommand.DBCommandTypeEnum.Select)
+                cmd.First(1);
 
-            return GetFirstValue<T>(cmd);
+            using (var command = Model.BuildCommand(Connection, cmd))
+            {
+                var value = command.ExecuteScalar();
+                return DBInternal.ConvertValue<T>(value);
+            }
         }
         public T GetValue<T>(string columnName, params object[] columnNameValuePair)
         {
             var tableName = columnName.Split('.')[0];
             var cmd = CreateSelectCommand(tableName, columnNameValuePair);
-            return GetValue<T>(columnName, cmd);
+            cmd.Select(columnName);
+            return GetValue<T>(cmd);
         }
 
-        public T GetValueIfExists<T>(string columnName, DBCommand cmd)
+        public bool Exists(DBCommand cmd)
         {
-            if (!cmd.IsView)
-                cmd.Select(columnName);
-
             var row = Get(cmd);
-            if (row == null)
-                throw DBSetException.NotFindRow();
-            return row.Get<T>(columnName);
+            return (row != null);
         }
-        public T GetValueIfExists<T>(string columnName, params object[] columnNameValuePair)
+        public bool Exists(string tableName, params object[] columnNameValuePair)
         {
-            var tableName = columnName.Split('.')[0];
             var cmd = CreateSelectCommand(tableName, columnNameValuePair);
-            return GetValueIfExists<T>(columnName, cmd);
-        }
-
-        public T GetFirstValue<T>(DBCommand cmd)
-        {
-            if (cmd.CommandType != DBCommand.DBCommandTypeEnum.Select)
-                throw DBSetException.SqlExecute();
-
-            cmd.First(1);
-            var command = Model.BuildCommand(Connection, cmd);
-            var value = command.ExecuteScalar();
-            command.Dispose();
-
-            if (value is DBNull || value == null)
-                return default(T);
-
-            return DBRow.ConvertValue<T>(value);
+            return Exists(cmd);
         }
 
         #endregion
-        #region Работа с DBRow
-
-        public List<DBRow> GetSetRows(string tableName)
-        {
-            return GetSetRows<DBRow>(tableName);
-        }
+        #region Работа с данными типа <DBRow>
 
         public DBRow New(string tableName)
         {
@@ -481,7 +463,7 @@ namespace DBSetExtension
             }
             return added;
         }
-        public void ClearCollection(IEnumerable collection)
+        private void ClearCollection(IEnumerable collection)
         {
             foreach (var row in collection)
                 Clear(row);
@@ -503,58 +485,59 @@ namespace DBSetExtension
         }
         private object ExecuteInsertCommand(DBRow row)
         {
-            var cmd = Connection.CreateCommand();
-            cmd.Transaction = _transaction;
-            cmd.CommandText = Model.DefaultInsertCommandsDict[row.Table];
-
-            int index = 0;
-            for (int i = 0; i < row.Table.Columns.Length; i++)
+            using (var cmd = Connection.CreateCommand())
             {
-                if (row.Table.Columns[i].IsPrimary)
-                    continue;
-                Model.AddParameter(cmd, "@p" + index, row[i]);
-                index++;
-            }
+                cmd.Transaction = _transaction;
+                cmd.CommandText = Model.DefaultInsertCommandsDict[row.Table];
 
-            var value = Model.ExecuteInsertCommand(cmd);
-            cmd.Dispose();
-            return value;
+                int index = 0;
+                for (int i = 0; i < row.Table.Columns.Length; i++)
+                {
+                    if (row.Table.Columns[i].IsPrimary)
+                        continue;
+                    Model.AddParameter(cmd, "@p" + index, row[i]);
+                    index++;
+                }
+                return Model.ExecuteInsertCommand(cmd);
+            }
         }
         private void ExecuteUpdateCommand(DBRow row)
         {
-            var cmd = Connection.CreateCommand();
-            cmd.Transaction = _transaction;
-            cmd.CommandText = Model.DefaultUpdateCommandsDict[row.Table];
-
-            int index = 0;
-            for (int i = 0; i < row.Table.Columns.Length; i++)
+            using (var cmd = Connection.CreateCommand())
             {
-                if (row.Table.Columns[i].IsPrimary)
-                {
-                    Model.AddParameter(cmd, "@id", row[i]);
-                    continue;
-                }
-                Model.AddParameter(cmd, "@p" + index, row[i]);
-                index++;
-            }
+                cmd.Transaction = _transaction;
+                cmd.CommandText = Model.DefaultUpdateCommandsDict[row.Table];
 
-            cmd.ExecuteNonQuery();
-            cmd.Dispose();
+                int index = 0;
+                for (int i = 0; i < row.Table.Columns.Length; i++)
+                {
+                    if (row.Table.Columns[i].IsPrimary)
+                    {
+                        Model.AddParameter(cmd, "@id", row[i]);
+                        continue;
+                    }
+                    Model.AddParameter(cmd, "@p" + index, row[i]);
+                    index++;
+                }
+
+                cmd.ExecuteNonQuery();
+            }
         }
         private void ExecuteDeleteCommand(DBRow row)
         {
-            var cmd = Connection.CreateCommand();
-            cmd.Transaction = _transaction;
-            cmd.CommandText = Model.DefaultDeleteCommandsDict[row.Table];
-            Model.AddParameter(cmd, "@id", row[row.Table.PrimaryKeyIndex]);
-            cmd.ExecuteNonQuery();
-            cmd.Dispose();
+            using (var cmd = Connection.CreateCommand())
+            {
+                cmd.Transaction = _transaction;
+                cmd.CommandText = Model.DefaultDeleteCommandsDict[row.Table];
+                Model.AddParameter(cmd, "@id", row[row.Table.PrimaryKeyIndex]);
+                cmd.ExecuteNonQuery();
+            }
         }
 
         private DBCommand CreateSelectCommand(string tableName, params object[] columnNameValuePair)
         {
             if (columnNameValuePair.Length % 2 != 0)
-                throw DBSetException.ParameterValuePairException();
+                throw DBInternal.ParameterValuePairException();
 
             var cmd = Command(tableName);
             for (int i = 0; i < columnNameValuePair.Length; i += 2)

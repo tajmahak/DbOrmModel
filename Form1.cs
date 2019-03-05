@@ -4,8 +4,8 @@ using System.Data.Common;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using DBSetExtension;
 using FirebirdSql.Data.FirebirdClient;
+using MyLibrary.DataBase;
 
 namespace DbOrmModel
 {
@@ -297,7 +297,7 @@ namespace DbOrmModel
             for (int i = 0; i < model.Tables.Length; i++)
             {
                 var table = model.Tables[i];
-                
+
                 var tableName = table.Name;
                 if (useUserName && _userNamesDictionary.ContainsKey(tableName))
                     tableName = _userNamesDictionary[tableName];
@@ -394,7 +394,7 @@ namespace DbOrmModel
             {
                 path = path.Trim('\"');
                 connection = CreateDataBaseConnection(path);
-                _currentModel = new DBModelFireBird();
+                _currentModel = new FireBirdDBModel();
                 _currentModel.Initialize(connection);
                 connection.Dispose();
 

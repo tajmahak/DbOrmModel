@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace DBSetExtension
+namespace MyLibrary.DataBase
 {
-    public class DBTable
+    public sealed class DBTable
     {
         public string Name { get; private set; }
         public DBColumn[] Columns { get; private set; }
@@ -19,7 +19,7 @@ namespace DBSetExtension
         {
             int index;
             if (!ColumnIndexDict.TryGetValue(columnName, out index))
-                throw DBSetException.UnknownColumn(this, columnName);
+                throw DBInternal.UnknownColumnException(this, columnName);
             return index;
         }
 

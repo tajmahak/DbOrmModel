@@ -46,22 +46,23 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DBSetExtension\DBColumn.cs" />
-    <Compile Include="DBSetExtension\DBCommand.cs" />
-    <Compile Include="DBSetExtension\DBModelBase.cs" />
-    <Compile Include="DBSetExtension\DBModelFireBird.cs" />
-    <Compile Include="DBSetExtension\DBReader.cs" />
-    <Compile Include="DBSetExtension\DBRow.cs" />
-    <Compile Include="DBSetExtension\DBSet.cs" />
-    <Compile Include="DBSetExtension\DBSetException.cs" />
-    <Compile Include="DBSetExtension\DBTable.cs" />
-    <Compile Include="DBSetExtension\IOrmTable.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="MyLibrary\DataBase\DBColumn.cs" />
+    <Compile Include="MyLibrary\DataBase\DBCommand.cs" />
+    <Compile Include="MyLibrary\DataBase\DBContext.cs" />
+    <Compile Include="MyLibrary\DataBase\DBInternal.cs" />
+    <Compile Include="MyLibrary\DataBase\DBModelBase.cs" />
+    <Compile Include="MyLibrary\DataBase\DBReader.cs" />
+    <Compile Include="MyLibrary\DataBase\DBRow.cs" />
+    <Compile Include="MyLibrary\DataBase\DBTable.cs" />
+    <Compile Include="MyLibrary\DataBase\FireBirdDBModel.cs" />
+    <Compile Include="MyLibrary\DataBase\Orm\DBOrmColumnAttribute.cs" />
+    <Compile Include="MyLibrary\DataBase\Orm\DBOrmTableBase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">

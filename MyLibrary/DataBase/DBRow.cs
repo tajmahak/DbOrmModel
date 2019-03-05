@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Data;
 
-namespace DBSetExtension
+namespace MyLibrary.DataBase
 {
-    public class DBRow
+    public sealed class DBRow
     {
         public DBTable Table { get; private set; }
         internal DataRowState State;
@@ -59,12 +59,21 @@ namespace DBSetExtension
 
         public T Get<T>(int index)
         {
-            return ConvertValue<T>(Values[index]);
+            return DBInternal.ConvertValue<T>(Values[index]);
         }
         public T Get<T>(string columnName)
         {
             var index = Table.GetIndex(columnName);
-            return ConvertValue<T>(Values[index]);
+            return DBInternal.ConvertValue<T>(Values[index]);
+        }
+
+        public string GetString(int columnIndex)
+        {
+            return GetString(columnIndex, false);
+        }
+        public string GetString(string columnName)
+        {
+            return GetString(columnName, false);
         }
 
         public string GetString(int columnIndex, bool allowNull)
@@ -84,7 +93,7 @@ namespace DBSetExtension
         {
             var value = this[columnIndex];
             if (!(value is IFormattable))
-                throw DBSetException.StringFormat();
+                throw DBInternal.StringFormatException();
             return ((IFormattable)value).ToString(format, null);
         }
         public string GetString(string columnName, string format)
@@ -118,27 +127,11 @@ namespace DBSetExtension
                 Values[i] = (column.IsPrimary) ? Guid.NewGuid() : column.DefaultValue;
             }
         }
-        internal static T ConvertValue<T>(object value)
-        {
-            var type = typeof(T);
-
-            if (value.GetType() == type)
-                return (T)value;
-            if (value is DBNull)
-                return default(T);
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                type = Nullable.GetUnderlyingType(type);
-            else if (type.BaseType == typeof(Enum))
-                type = Enum.GetUnderlyingType(type);
-
-            return (T)Convert.ChangeType(value, type);
-        }
 
         private void SetValueInternal(object value, DBColumn column, int index, bool allowNull)
         {
             if (Table.Name == null)
-                throw DBSetException.ProcessRow();
+                throw DBInternal.ProcessRowException();
 
             value = value ?? DBNull.Value;
 
@@ -153,7 +146,7 @@ namespace DBSetExtension
             else if (value is Guid)
             {
                 if (column.IsPrimary)
-                    throw DBSetException.GenerateSetID(column);
+                    throw DBInternal.GenerateSetIDException(column);
             }
             else
             {
@@ -163,11 +156,11 @@ namespace DBSetExtension
                 }
                 catch (Exception ex)
                 {
-                    throw DBSetException.DataConvert(column, value, ex);
+                    throw DBInternal.DataConvertException(column, value, ex);
                 }
 
                 if (value is string && ((string)value).Length > column.MaxTextLength)
-                    throw DBSetException.StringOverflow(column);
+                    throw DBInternal.StringOverflowException(column);
             }
 
             if (State == DataRowState.Unchanged)
@@ -179,7 +172,7 @@ namespace DBSetExtension
                 if (value.GetType() == prevValue.GetType() && value is IComparable)
                     isChanged = !object.Equals(value, prevValue);
                 else if (value is byte[] && prevValue is byte[])
-                    isChanged = !EqualsBlob((byte[])value, (byte[])prevValue);
+                    isChanged = !DBInternal.EqualsBlob((byte[])value, (byte[])prevValue);
 
                 if (isChanged)
                     State = DataRowState.Modified;
@@ -203,17 +196,6 @@ namespace DBSetExtension
 
                 Values[index] = value;
             }
-        }
-        private static bool EqualsBlob(byte[] a, byte[] b)
-        {
-            if (a == null || b == null) return false;
-            if (a.Length != b.Length) return false;
-
-            int length = a.Length;
-            for (int i = 0; i < length; i++)
-                if (a[i] != b[i])
-                    return false;
-            return true;
         }
     }
 }
