@@ -11,6 +11,27 @@ namespace DbOrmModel
 {
     public partial class Form1 : Form
     {
+        private string CommentPath
+        {
+            get
+            {
+                if (_dbPath == null)
+                    return null;
+                return _dbPath + ".comment.txt";
+            }
+        }
+        private string UserNamesPath
+        {
+            get
+            {
+                if (_dbPath == null)
+                    return null;
+                return _dbPath + ".usernames.txt";
+            }
+        }
+
+
+
         private DBModelBase _currentModel;
         private string _dbPath;
         private string[] _args;
@@ -18,8 +39,6 @@ namespace DbOrmModel
         public Form1(string[] args)
         {
             _args = args;
-            _commentDictionary = new Dictionary<string, string>();
-            _userNamesDictionary = new Dictionary<string, string>();
             InitializeComponent();
         }
         private void Form1_Shown(object sender, EventArgs e)
@@ -62,16 +81,6 @@ namespace DbOrmModel
         }
 
         // комментарии
-        private Dictionary<string, string> _commentDictionary;
-        private string CommentPath
-        {
-            get
-            {
-                if (_dbPath == null)
-                    return null;
-                return _dbPath + ".comment.txt";
-            }
-        }
         private void checkBoxUseComments_CheckedChanged(object sender, EventArgs e)
         {
             if (_dbPath != null)
@@ -84,69 +93,61 @@ namespace DbOrmModel
         }
         private void PrepareCommentFile()
         {
-            PrepareCommentDictionary();
+            //!!!
+            //PrepareCommentDictionary();
 
-            string comment;
+            //string comment;
 
-            var text = new StringBuilder();
-            foreach (var table in _currentModel.Tables)
-            {
-                text.AppendLine();
-                text.Append(table.Name + "\t");
-                if (_commentDictionary.TryGetValue(table.Name, out comment))
-                {
-                    text.Append(comment);
-                }
-                text.AppendLine();
+            //var text = new StringBuilder();
+            //foreach (var table in _currentModel.Tables)
+            //{
+            //    text.AppendLine();
+            //    text.Append(table.Name + "\t");
+            //    if (_commentDictionary.TryGetValue(table.Name, out comment))
+            //    {
+            //        text.Append(comment);
+            //    }
+            //    text.AppendLine();
 
-                foreach (var column in table.Columns)
-                {
-                    var columnName = table.Name + "." + column.Name;
-                    text.Append(columnName + "\t");
-                    if (_commentDictionary.TryGetValue(columnName, out comment))
-                    {
-                        text.Append(comment);
-                    }
-                    text.AppendLine();
-                }
-            }
-            text.Remove(0, 2); // убирает первую пустую строку
+            //    foreach (var column in table.Columns)
+            //    {
+            //        var columnName = table.Name + "." + column.Name;
+            //        text.Append(columnName + "\t");
+            //        if (_commentDictionary.TryGetValue(columnName, out comment))
+            //        {
+            //            text.Append(comment);
+            //        }
+            //        text.AppendLine();
+            //    }
+            //}
+            //text.Remove(0, 2); // убирает первую пустую строку
 
-            File.Delete(CommentPath);
-            File.WriteAllText(CommentPath, text.ToString(), Encoding.UTF8);
+            //File.Delete(CommentPath);
+            //File.WriteAllText(CommentPath, text.ToString(), Encoding.UTF8);
         }
         private void PrepareCommentDictionary()
         {
-            _commentDictionary.Clear();
-            if (!File.Exists(CommentPath))
-                return;
+            //!!!
+            //_commentDictionary.Clear();
+            //if (!File.Exists(CommentPath))
+            //    return;
 
-            foreach (var line in File.ReadAllLines(CommentPath))
-            {
-                string[] split = line.Split('\t');
-                if (split.Length != 2)
-                    continue;
+            //foreach (var line in File.ReadAllLines(CommentPath))
+            //{
+            //    string[] split = line.Split('\t');
+            //    if (split.Length != 2)
+            //        continue;
 
-                var text1 = split[0].Trim();
-                var text2 = split[1].Trim();
-                if (text2.Length == 0)
-                    continue;
+            //    var text1 = split[0].Trim();
+            //    var text2 = split[1].Trim();
+            //    if (text2.Length == 0)
+            //        continue;
 
-                _commentDictionary.Add(text1, text2);
-            }
+            //    _commentDictionary.Add(text1, text2);
+            //}
         }
 
         // польз. имена
-        private Dictionary<string, string> _userNamesDictionary;
-        private string UserNamesPath
-        {
-            get
-            {
-                if (_dbPath == null)
-                    return null;
-                return _dbPath + ".usernames.txt";
-            }
-        }
         private void checkBoxUseUserNames_CheckedChanged(object sender, EventArgs e)
         {
             if (_dbPath != null)
@@ -159,232 +160,92 @@ namespace DbOrmModel
         }
         private void PrepareUserNamesFile()
         {
-            PrepareUserNamesDictionary();
+            //!!!
+            //PrepareUserNamesDictionary();
 
-            string userName;
+            //string userName;
 
-            var text = new StringBuilder();
-            foreach (var table in _currentModel.Tables)
-            {
-                text.AppendLine();
-                text.Append(table.Name + "\t");
+            //var text = new StringBuilder();
+            //foreach (var table in _currentModel.Tables)
+            //{
+            //    text.AppendLine();
+            //    text.Append(table.Name + "\t");
 
-                if (_userNamesDictionary.TryGetValue(table.Name, out userName))
-                {
-                    text.Append(userName);
-                }
-                else
-                {
-                    text.Append(table.Name);
-                }
+            //    if (_userNamesDictionary.TryGetValue(table.Name, out userName))
+            //    {
+            //        text.Append(userName);
+            //    }
+            //    else
+            //    {
+            //        text.Append(table.Name);
+            //    }
 
-                text.AppendLine();
+            //    text.AppendLine();
 
-                foreach (var column in table.Columns)
-                {
-                    var columnName = table.Name + "." + column.Name;
-                    text.Append(columnName + "\t");
+            //    foreach (var column in table.Columns)
+            //    {
+            //        var columnName = table.Name + "." + column.Name;
+            //        text.Append(columnName + "\t");
 
-                    var fieldName = column.Name;
-                    if (fieldName.StartsWith(table.Name))
-                        fieldName = fieldName.Remove(0, table.Name.Length + 1);
+            //        var fieldName = column.Name;
+            //        if (fieldName.StartsWith(table.Name))
+            //            fieldName = fieldName.Remove(0, table.Name.Length + 1);
 
-                    if (_userNamesDictionary.TryGetValue(columnName, out userName))
-                    {
-                        text.Append(userName);
-                    }
-                    else
-                    {
-                        text.Append(fieldName);
-                    }
-                    text.AppendLine();
-                }
-            }
-            text.Remove(0, 2); // убирает первую пустую строку
+            //        if (_userNamesDictionary.TryGetValue(columnName, out userName))
+            //        {
+            //            text.Append(userName);
+            //        }
+            //        else
+            //        {
+            //            text.Append(fieldName);
+            //        }
+            //        text.AppendLine();
+            //    }
+            //}
+            //text.Remove(0, 2); // убирает первую пустую строку
 
-            File.Delete(UserNamesPath);
-            File.WriteAllText(UserNamesPath, text.ToString(), Encoding.UTF8);
+            //File.Delete(UserNamesPath);
+            //File.WriteAllText(UserNamesPath, text.ToString(), Encoding.UTF8);
         }
         private void PrepareUserNamesDictionary()
         {
-            _userNamesDictionary.Clear();
-            if (!File.Exists(UserNamesPath))
-                return;
+            //!!!
+            //_userNamesDictionary.Clear();
+            //if (!File.Exists(UserNamesPath))
+            //    return;
 
-            foreach (var line in File.ReadAllLines(UserNamesPath))
-            {
-                string[] split = line.Split('\t');
-                if (split.Length != 2)
-                    continue;
+            //foreach (var line in File.ReadAllLines(UserNamesPath))
+            //{
+            //    string[] split = line.Split('\t');
+            //    if (split.Length != 2)
+            //        continue;
 
-                var text1 = split[0].Trim();
-                var text2 = split[1].Trim();
-                if (text2.Length == 0)
-                    continue;
+            //    var text1 = split[0].Trim();
+            //    var text2 = split[1].Trim();
+            //    if (text2.Length == 0)
+            //        continue;
 
-                _userNamesDictionary.Add(text1, text2);
-            }
+            //    _userNamesDictionary.Add(text1, text2);
+            //}
         }
 
         private void CreateText(DBModelBase model, bool useComment, bool useUserName)
         {
-            string s1 = "", s2 = ""; // сепараторы названий сущности таблицы (убраны для совместимости с другими БД)
-            string comment;
+            //!!!
+            //textBox1.Clear();
+            //textBox2.Clear();
+            //textBox3.Clear();
 
-            var strDB = new StringBuilder();
-            #region
+            //textBox1.Text = strDB.ToString();
 
-            strDB.Line(0, "namespace DB");
-            strDB.AppendLine("{");
+            //var str = new StringBuilder();
+            //str.Append(strORM.ToString());
+            //textBox2.Text = str.ToString();
 
-            for (int i = 0; i < model.Tables.Length; i++)
-            {
-                var table = model.Tables[i];
-
-                var tableName = table.Name;
-                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
-
-                strDB.Line(1, "#region " + tableName);
-
-                if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
-                {
-                    strDB.LineComment(1, comment);
-                }
-
-                strDB.Line(1, "public static class " + tableName);
-                strDB.Line(1, "{");
-
-                strDB.Line(2, "public const string _ = \"{1}{0}{2}\";", table.Name, s1, s2);
-                for (int j = 0; j < table.Columns.Length; j++)
-                {
-                    var column = table.Columns[j];
-
-                    var fieldName = column.Name;
-                    if (useUserName && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
-                    {
-                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
-                    }
-                    else
-                    {
-                        if (fieldName.StartsWith(table.Name))
-                        {
-                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
-                        }
-                    }
-
-                    InsertComment(strDB, 2, column, true);
-                    strDB.Line(2, "public const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", fieldName, table.Name, column.Name, s1, s2);
-                }
-                strDB.Line(1, "}");
-                strDB.Line(1, "#endregion");
-            }
-            strDB.Line(0, "}");
-
-            #endregion
-
-            var strORM = new StringBuilder();
-            #region
-
-            strORM.Line(0, "namespace ORM");
-            strORM.AppendLine("{");
-
-            strORM.Line(1, "using System;");
-            strORM.Line(1, "using MyLibrary.DataBase;");
-            strORM.Line(1, "using MyLibrary.DataBase.Orm;");
-            strORM.AppendLine();
-
-            for (int i = 0; i < model.Tables.Length; i++)
-            {
-                var table = model.Tables[i];
-
-                var tableName = table.Name;
-                if (useUserName && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
-
-                strORM.Line(1, "#region " + tableName);
-                if (useComment && _commentDictionary.TryGetValue(table.Name, out comment))
-                {
-                    strORM.LineComment(1, comment);
-                }
-
-                strORM.Line(1, "public class " + tableName + ": DBOrmTableBase");
-                strORM.Line(1, "{");
-
-                strORM.LineProperty(2, "public string _", "return Row.Table.Name;", null);
-
-                for (int j = 0; j < table.Columns.Length; j++)
-                {
-                    var column = table.Columns[j];
-
-                    var fieldName = column.Name;
-                    if (useUserName && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
-                    {
-                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
-                    }
-                    else
-                    {
-                        if (fieldName.StartsWith(table.Name))
-                        {
-                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
-                        }
-                    }
-
-                    var constName = "__" + fieldName.ToLower();
-
-                    strORM.AppendLine();
-
-                    strORM.Line(2, "private const string {0} = \"{3}{1}{4}.{3}{2}{4}\";", constName, table.Name, column.Name, s1, s2);
-
-                    InsertComment(strORM, 2, column, false);
-                    string objectType = GetObjectType(column);
-
-                    strORM.Line(2, "[DBOrmColumn(" + constName + ")]");
-
-                    string propertyText = "public " + objectType + " " + fieldName;
-                    string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
-                    string setText = "Row.SetNotNull(" + constName + ", value);";
-                    strORM.LineProperty(2, propertyText, getText, setText);
-
-                    InsertComment(strORM, 2, column, false);
-                    propertyText = "public object _" + fieldName;
-                    getText = "return Row[" + constName + "];";
-                    setText = "Row.SetNotNull(" + constName + ", value);";
-                    strORM.LineProperty(2, propertyText, getText, setText);
-                }
-
-                strORM.AppendLine();
-
-                strORM.Line(2, "public " + tableName + "(DBRow row)");
-                strORM.Line(2, "{");
-                strORM.Line(3, "Row = row;");
-                strORM.Line(2, "}");
-
-                strORM.Line(1, "}");
-                strORM.Line(1, "#endregion");
-            }
-            strORM.Line(0, "}");
-
-            #endregion
-
-            #region Заполнение текстбоксов
-
-            textBox1.Clear();
-            textBox2.Clear();
-            textBox3.Clear();
-
-            textBox1.Text = strDB.ToString();
-
-            var str = new StringBuilder();
-            str.Append(strORM.ToString());
-            textBox2.Text = str.ToString();
-
-            str = new StringBuilder();
-            str.AppendLine(strDB.ToString());
-            str.Append(strORM.ToString());
-            textBox3.Text = str.ToString();
-
-            #endregion
+            //str = new StringBuilder();
+            //str.AppendLine(strDB.ToString());
+            //str.Append(strORM.ToString());
+            //textBox3.Text = str.ToString();
         }
         private void Open(string path)
         {
@@ -449,97 +310,6 @@ namespace DbOrmModel
                 return;
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
-        private string GetObjectType(DBColumn column)
-        {
-            string objectType;
-            if (column.Comment != null)
-            {
-                if (column.Comment == "BOOLEAN")
-                {
-                    objectType = typeof(bool).Name;
-                }
-                else
-                {
-                    objectType = column.Comment;
-                }
-            }
-            else
-            {
-                objectType = column.DataType.Name;
-            }
-            if (column.AllowDBNull && !column.DataType.IsClass)
-            {
-                objectType = "Nullable<" + objectType + ">";
-            }
-            return objectType;
-        }
-        private string GetCommentObjectType(DBColumn column)
-        {
-            string objectType;
-            if (column.Comment != null)
-            {
-                if (column.Comment == "BOOLEAN")
-                {
-                    objectType = typeof(bool).Name;
-                }
-                else
-                {
-                    objectType = column.Comment;
-                }
-            }
-            else
-            {
-                objectType = column.DataType.Name;
-            }
-
-            switch (objectType)
-            {
-                case "Boolean": objectType = "bool"; break;
-                case "Char": objectType = "char"; break;
-                case "String": objectType = "string"; break;
-
-                case "Byte": objectType = "byte"; break;
-                case "SByte": objectType = "sbyte"; break;
-                case "Int16": objectType = "short"; break;
-                case "UInt16": objectType = "ushort"; break;
-                case "Int32": objectType = "int"; break;
-                case "UInt32": objectType = "uint"; break;
-                case "Int64": objectType = "long"; break;
-                case "UInt64": objectType = "ulong"; break;
-
-                case "Single": objectType = "float"; break;
-                case "Double": objectType = "double"; break;
-                case "Decimal": objectType = "decimal"; break;
-            }
-
-            if (column.AllowDBNull)
-            {
-                objectType += "?";
-            }
-            return objectType;
-        }
-        private void InsertComment(StringBuilder str, int level, DBColumn column, bool insertTypeName)
-        {
-            //!!!
-            //if (!checkBoxUseComments.Checked)
-            //    return;
-
-            var columnName = column.Table.Name + "." + column.Name;
-
-            string comment = string.Empty;
-            if (_commentDictionary.ContainsKey(columnName))
-            {
-                comment += _commentDictionary[columnName];
-            }
-            if (insertTypeName)
-            {
-                comment += " [" + GetCommentObjectType(column) + "]";
-            }
-            if (comment.Length > 0)
-            {
-                str.LineComment(level, comment);
-            }
-        }
+    
     }
-   
 }
