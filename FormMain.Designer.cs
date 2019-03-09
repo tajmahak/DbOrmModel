@@ -1,6 +1,6 @@
 ﻿namespace DbOrmModel
 {
-    partial class Form1
+    partial class FormMain
     {
         /// <summary>
         /// Требуется переменная конструктора.
@@ -44,9 +44,7 @@
             this.дополнительноToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьКомментарииToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьПользовательскиеИменаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.создатьобновитьФайлКомментариевToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.создатьобновитьФайлПользовательскихИмёнToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -208,9 +206,7 @@
             this.дополнительноToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.использоватьКомментарииToolStripMenuItem,
             this.использоватьПользовательскиеИменаToolStripMenuItem,
-            this.toolStripSeparator1,
-            this.создатьобновитьФайлКомментариевToolStripMenuItem,
-            this.создатьобновитьФайлПользовательскихИмёнToolStripMenuItem});
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem});
             this.дополнительноToolStripMenuItem.Name = "дополнительноToolStripMenuItem";
             this.дополнительноToolStripMenuItem.Size = new System.Drawing.Size(107, 20);
             this.дополнительноToolStripMenuItem.Text = "Дополнительно";
@@ -221,8 +217,9 @@
             this.использоватьКомментарииToolStripMenuItem.CheckOnClick = true;
             this.использоватьКомментарииToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.использоватьКомментарииToolStripMenuItem.Name = "использоватьКомментарииToolStripMenuItem";
-            this.использоватьКомментарииToolStripMenuItem.Size = new System.Drawing.Size(340, 22);
+            this.использоватьКомментарииToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
             this.использоватьКомментарииToolStripMenuItem.Text = "Использовать комментарии";
+            this.использоватьКомментарииToolStripMenuItem.Click += new System.EventHandler(this.использоватьКомментарииToolStripMenuItem_Click);
             // 
             // использоватьПользовательскиеИменаToolStripMenuItem
             // 
@@ -230,25 +227,16 @@
             this.использоватьПользовательскиеИменаToolStripMenuItem.CheckOnClick = true;
             this.использоватьПользовательскиеИменаToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.использоватьПользовательскиеИменаToolStripMenuItem.Name = "использоватьПользовательскиеИменаToolStripMenuItem";
-            this.использоватьПользовательскиеИменаToolStripMenuItem.Size = new System.Drawing.Size(340, 22);
+            this.использоватьПользовательскиеИменаToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
             this.использоватьПользовательскиеИменаToolStripMenuItem.Text = "Использовать пользовательские имена";
+            this.использоватьПользовательскиеИменаToolStripMenuItem.Click += new System.EventHandler(this.использоватьПользовательскиеИменаToolStripMenuItem_Click);
             // 
-            // toolStripSeparator1
+            // создатьобновитьФайлыМетаданныхToolStripMenuItem
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(337, 6);
-            // 
-            // создатьобновитьФайлКомментариевToolStripMenuItem
-            // 
-            this.создатьобновитьФайлКомментариевToolStripMenuItem.Name = "создатьобновитьФайлКомментариевToolStripMenuItem";
-            this.создатьобновитьФайлКомментариевToolStripMenuItem.Size = new System.Drawing.Size(340, 22);
-            this.создатьобновитьФайлКомментариевToolStripMenuItem.Text = "Создать/обновить файл комментариев";
-            // 
-            // создатьобновитьФайлПользовательскихИмёнToolStripMenuItem
-            // 
-            this.создатьобновитьФайлПользовательскихИмёнToolStripMenuItem.Name = "создатьобновитьФайлПользовательскихИмёнToolStripMenuItem";
-            this.создатьобновитьФайлПользовательскихИмёнToolStripMenuItem.Size = new System.Drawing.Size(340, 22);
-            this.создатьобновитьФайлПользовательскихИмёнToolStripMenuItem.Text = "Создать/обновить файл пользовательских имён";
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Name = "создатьобновитьФайлыМетаданныхToolStripMenuItem";
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Text = "Создать/обновить файлы метаданных";
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Click += new System.EventHandler(this.создатьобновитьФайлыМетаданныхToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -294,11 +282,9 @@
         private System.Windows.Forms.ToolStripMenuItem дополнительноToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьКомментарииToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьПользовательскиеИменаToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлКомментариевToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлПользовательскихИмёнToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem открытьToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem последниеToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлыМетаданныхToolStripMenuItem;
     }
 }
 
