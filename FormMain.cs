@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Drawing;
 using System.IO;
@@ -11,36 +12,42 @@ namespace DbOrmModel
 {
     public partial class FormMain : Form
     {
-        private string CommentPath
+        private string CommentFilePath
         {
             get
             {
-                if (_dbPath == null)
+                if (_dbFilePath == null)
                     return null;
-                return _dbPath + ".comment.txt";
+                return _dbFilePath + ".comment.txt";
             }
         }
-        private string UserNamesPath
+        private string UserNamesFilePath
         {
             get
             {
-                if (_dbPath == null)
+                if (_dbFilePath == null)
                     return null;
-                return _dbPath + ".usernames.txt";
+                return _dbFilePath + ".usernames.txt";
             }
         }
 
-        private string _dbPath;
+        private string _dbFilePath;
         private string[] _args;
         private OrmModelTextBuilder _builder;
+        private List<string> _recentList;
+        private const string _recentFilePath = "recent.txt";
+        private const int _recentFileCount = 10;
 
         public FormMain(string[] args)
         {
+            _recentList = new List<string>();
             _args = args;
             InitializeComponent();
 
+            UpdateRecentList();
             WriteStatus(string.Empty, false);
         }
+
         private void Form1_Shown(object sender, EventArgs e)
         {
             if (_args.Length > 0 && File.Exists(_args[0]))
@@ -61,41 +68,73 @@ namespace DbOrmModel
             Open(path[0]);
         }
 
+        private void открытьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Filter = "Файлы базы данных (*.FDB)|*.FDB";
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                Open(dialog.FileName);
+            }
+        }
+        private void recentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem recentItem = (ToolStripMenuItem)sender;
+            var filePath = recentItem.Text;
+
+            Open(filePath);
+        }
+        private void выходToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+        private void очиститьСписокToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            File.Delete(_recentFilePath);
+            UpdateRecentList();
+        }
         private void использоватьКомментарииToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Open(_dbPath);
+            Open(_dbFilePath);
         }
         private void использоватьПользовательскиеИменаToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Open(_dbPath);
+            Open(_dbFilePath);
         }
         private void создатьобновитьФайлыМетаданныхToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (_dbFilePath == null)
+            {
+                WriteStatus("База данных не открыта", true);
+                return;
+            }
+
             string[] commentContent = null;
             string[] userNamesContent = null;
-            if (File.Exists(CommentPath))
+            if (File.Exists(CommentFilePath))
             {
-                commentContent = File.ReadAllLines(CommentPath);
+                commentContent = File.ReadAllLines(CommentFilePath);
             }
-            if (File.Exists(UserNamesPath))
+            if (File.Exists(UserNamesFilePath))
             {
-                userNamesContent = File.ReadAllLines(UserNamesPath);
+                userNamesContent = File.ReadAllLines(UserNamesFilePath);
             }
 
             commentContent = _builder.UpdateCommentContent(commentContent);
             userNamesContent = _builder.UpdateUserNamesContent(userNamesContent);
 
-            if (File.Exists(CommentPath))
+            if (File.Exists(CommentFilePath))
             {
-                File.Delete(CommentPath);
+                File.Delete(CommentFilePath);
             }
-            if (File.Exists(UserNamesPath))
+            if (File.Exists(UserNamesFilePath))
             {
-                File.Delete(UserNamesPath);
+                File.Delete(UserNamesFilePath);
             }
 
-            File.WriteAllLines(CommentPath, commentContent, Encoding.UTF8);
-            File.WriteAllLines(UserNamesPath, userNamesContent, Encoding.UTF8);
+            File.WriteAllLines(CommentFilePath, commentContent, Encoding.UTF8);
+            File.WriteAllLines(UserNamesFilePath, userNamesContent, Encoding.UTF8);
 
             WriteStatus("Создание/обновление файлов метаданных выполнено", false);
         }
@@ -126,25 +165,27 @@ namespace DbOrmModel
             if (!File.Exists(databasePath))
                 return;
 
+            WriteStatus("Загрузка базы данных...", false);
+
             try
             {
                 databasePath = Path.GetFullPath(databasePath);
-                if (databasePath != _dbPath)
+                if (databasePath != _dbFilePath)
                 {
                     _builder = InitializeBuilder(databasePath);
                 }
-                _dbPath = databasePath;
+                _dbFilePath = databasePath;
 
 
                 string[] commentContent = null;
                 string[] userNamesContent = null;
-                if (File.Exists(CommentPath))
+                if (File.Exists(CommentFilePath))
                 {
-                    commentContent = File.ReadAllLines(CommentPath);
+                    commentContent = File.ReadAllLines(CommentFilePath);
                 }
-                if (File.Exists(UserNamesPath))
+                if (File.Exists(UserNamesFilePath))
                 {
-                    userNamesContent = File.ReadAllLines(UserNamesPath);
+                    userNamesContent = File.ReadAllLines(UserNamesFilePath);
                 }
                 _builder.PrepareCommentDictionary(commentContent);
                 _builder.PrepareUserNamesDictionary(userNamesContent);
@@ -160,12 +201,58 @@ namespace DbOrmModel
                 textBox2.Text = ormText;
                 textBox3.Text = dbText + Environment.NewLine + ormText;
 
-                WriteStatus(string.Empty, false);
+                AddToRecentList(_dbFilePath);
+                WriteStatus(_dbFilePath, false);
             }
             catch (Exception ex)
             {
                 WriteStatus(ex.Message, true);
             }
+        }
+        private void UpdateRecentList()
+        {
+            _recentList.Clear();
+
+            var dropDownItems = недавниеФайлыToolStripMenuItem.DropDownItems;
+            for (int i = 2; i < dropDownItems.Count; i++)
+            {
+                dropDownItems.RemoveAt(i);
+                i--;
+            }
+
+            if (File.Exists(_recentFilePath))
+            {
+                foreach (var item in File.ReadAllLines(_recentFilePath, Encoding.UTF8))
+                {
+                    if (!File.Exists(item))
+                        continue;
+
+                    _recentList.Add(item);
+
+                    var recentItem = new ToolStripMenuItem();
+                    recentItem.Text = item;
+                    recentItem.Click += new EventHandler(recentToolStripMenuItem_Click);
+                    dropDownItems.Add(recentItem);
+                }
+            }
+        }
+        private void AddToRecentList(string path)
+        {
+            var index = _recentList.FindIndex(x => x == path);
+            if (index != -1)
+            {
+                _recentList.RemoveAt(index);
+            }
+
+            if (_recentList.Count < _recentFileCount)
+            {
+                _recentList.Insert(0, path);
+            }
+
+            File.Delete(_recentFilePath);
+            File.WriteAllLines(_recentFilePath, _recentList.ToArray(), Encoding.UTF8);
+
+            UpdateRecentList();
         }
         private OrmModelTextBuilder InitializeBuilder(string databasePath)
         {
@@ -221,6 +308,7 @@ namespace DbOrmModel
         {
             toolStripStatusLabel1.ForeColor = error ? Color.DarkRed : Color.Black;
             toolStripStatusLabel1.Text = text;
+            Application.DoEvents();
         }
     }
 }

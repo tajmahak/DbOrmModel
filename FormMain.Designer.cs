@@ -40,7 +40,11 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.файлToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.открытьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.последниеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.недавниеФайлыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.очиститьСписокToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.выходToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.дополнительноToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьКомментарииToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьПользовательскиеИменаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,7 +59,7 @@
             this.buttonCopyDb.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonCopyDb.Location = new System.Drawing.Point(3, 3);
             this.buttonCopyDb.Name = "buttonCopyDb";
-            this.buttonCopyDb.Size = new System.Drawing.Size(312, 39);
+            this.buttonCopyDb.Size = new System.Drawing.Size(283, 39);
             this.buttonCopyDb.TabIndex = 5;
             this.buttonCopyDb.Text = "Копировать\r\nDB";
             this.buttonCopyDb.UseVisualStyleBackColor = true;
@@ -64,9 +68,9 @@
             // buttonCopyOrm
             // 
             this.buttonCopyOrm.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonCopyOrm.Location = new System.Drawing.Point(321, 3);
+            this.buttonCopyOrm.Location = new System.Drawing.Point(292, 3);
             this.buttonCopyOrm.Name = "buttonCopyOrm";
-            this.buttonCopyOrm.Size = new System.Drawing.Size(312, 39);
+            this.buttonCopyOrm.Size = new System.Drawing.Size(283, 39);
             this.buttonCopyOrm.TabIndex = 6;
             this.buttonCopyOrm.Text = "Копировать\r\nORM";
             this.buttonCopyOrm.UseVisualStyleBackColor = true;
@@ -75,9 +79,9 @@
             // buttonCopyDbOrm
             // 
             this.buttonCopyDbOrm.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonCopyDbOrm.Location = new System.Drawing.Point(639, 3);
+            this.buttonCopyDbOrm.Location = new System.Drawing.Point(581, 3);
             this.buttonCopyDbOrm.Name = "buttonCopyDbOrm";
-            this.buttonCopyDbOrm.Size = new System.Drawing.Size(314, 39);
+            this.buttonCopyDbOrm.Size = new System.Drawing.Size(284, 39);
             this.buttonCopyDbOrm.TabIndex = 8;
             this.buttonCopyDbOrm.Text = "Копировать\r\nDB+ORM";
             this.buttonCopyDbOrm.UseVisualStyleBackColor = true;
@@ -104,7 +108,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 45F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(956, 453);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(868, 488);
             this.tableLayoutPanel1.TabIndex = 9;
             // 
             // textBox1
@@ -118,7 +122,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(312, 402);
+            this.textBox1.Size = new System.Drawing.Size(283, 437);
             this.textBox1.TabIndex = 9;
             this.textBox1.WordWrap = false;
             // 
@@ -128,12 +132,12 @@
             this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox2.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.textBox2.Location = new System.Drawing.Point(321, 48);
+            this.textBox2.Location = new System.Drawing.Point(292, 48);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(312, 402);
+            this.textBox2.Size = new System.Drawing.Size(283, 437);
             this.textBox2.TabIndex = 10;
             this.textBox2.WordWrap = false;
             // 
@@ -143,22 +147,23 @@
             this.textBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox3.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.textBox3.Location = new System.Drawing.Point(639, 48);
+            this.textBox3.Location = new System.Drawing.Point(581, 48);
             this.textBox3.Multiline = true;
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
             this.textBox3.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox3.Size = new System.Drawing.Size(314, 402);
+            this.textBox3.Size = new System.Drawing.Size(284, 437);
             this.textBox3.TabIndex = 11;
             this.textBox3.WordWrap = false;
             // 
             // statusStrip1
             // 
+            this.statusStrip1.BackColor = System.Drawing.Color.White;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 483);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 518);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(956, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(868, 22);
             this.statusStrip1.TabIndex = 16;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -176,7 +181,7 @@
             this.дополнительноToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(956, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(868, 24);
             this.menuStrip1.TabIndex = 17;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -184,7 +189,9 @@
             // 
             this.файлToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.открытьToolStripMenuItem,
-            this.последниеToolStripMenuItem});
+            this.недавниеФайлыToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.выходToolStripMenuItem});
             this.файлToolStripMenuItem.Name = "файлToolStripMenuItem";
             this.файлToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.файлToolStripMenuItem.Text = "Файл";
@@ -192,14 +199,42 @@
             // открытьToolStripMenuItem
             // 
             this.открытьToolStripMenuItem.Name = "открытьToolStripMenuItem";
-            this.открытьToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
-            this.открытьToolStripMenuItem.Text = "Открыть";
+            this.открытьToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.открытьToolStripMenuItem.Text = "Открыть...";
+            this.открытьToolStripMenuItem.Click += new System.EventHandler(this.открытьToolStripMenuItem_Click);
             // 
-            // последниеToolStripMenuItem
+            // недавниеФайлыToolStripMenuItem
             // 
-            this.последниеToolStripMenuItem.Name = "последниеToolStripMenuItem";
-            this.последниеToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
-            this.последниеToolStripMenuItem.Text = "Последние";
+            this.недавниеФайлыToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.очиститьСписокToolStripMenuItem,
+            this.toolStripSeparator1});
+            this.недавниеФайлыToolStripMenuItem.Name = "недавниеФайлыToolStripMenuItem";
+            this.недавниеФайлыToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.недавниеФайлыToolStripMenuItem.Text = "Недавние файлы";
+            // 
+            // очиститьСписокToolStripMenuItem
+            // 
+            this.очиститьСписокToolStripMenuItem.Name = "очиститьСписокToolStripMenuItem";
+            this.очиститьСписокToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.очиститьСписокToolStripMenuItem.Text = "Очистить список";
+            this.очиститьСписокToolStripMenuItem.Click += new System.EventHandler(this.очиститьСписокToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(165, 6);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(165, 6);
+            // 
+            // выходToolStripMenuItem
+            // 
+            this.выходToolStripMenuItem.Name = "выходToolStripMenuItem";
+            this.выходToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.выходToolStripMenuItem.Text = "Выход";
+            this.выходToolStripMenuItem.Click += new System.EventHandler(this.выходToolStripMenuItem_Click);
             // 
             // дополнительноToolStripMenuItem
             // 
@@ -238,17 +273,18 @@
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Text = "Создать/обновить файлы метаданных";
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Click += new System.EventHandler(this.создатьобновитьФайлыМетаданныхToolStripMenuItem_Click);
             // 
-            // Form1
+            // FormMain
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(956, 505);
+            this.ClientSize = new System.Drawing.Size(868, 540);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.tableLayoutPanel1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Name = "Form1";
+            this.MinimumSize = new System.Drawing.Size(400, 300);
+            this.Name = "FormMain";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Генератор ORM-модели";
@@ -282,9 +318,13 @@
         private System.Windows.Forms.ToolStripMenuItem дополнительноToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьКомментарииToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьПользовательскиеИменаToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem открытьToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem последниеToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлыМетаданныхToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem недавниеФайлыToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem очиститьСписокToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem открытьToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem выходToolStripMenuItem;
     }
 }
 
