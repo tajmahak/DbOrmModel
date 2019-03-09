@@ -21,7 +21,6 @@ namespace DbOrmModel
         private Dictionary<string, string> _commentDictionary;
         private Dictionary<string, string> _userNamesDictionary;
 
-
         public string CreateDbText()
         {
             string comment;
@@ -162,8 +161,6 @@ namespace DbOrmModel
 
             return str.ToString();
         }
-
-
         public void PrepareCommentDictionary(string[] content)
         {
             _commentDictionary.Clear();
@@ -206,7 +203,6 @@ namespace DbOrmModel
                 _userNamesDictionary.Add(text1, text2);
             }
         }
-
         public string[] UpdateCommentContent(string[] content)
         {
             PrepareCommentDictionary(content);
@@ -288,9 +284,6 @@ namespace DbOrmModel
             // преобразование текста в массив строк
             return text.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
         }
-
-
-
 
         private void InsertComment(StringBuilder str, int level, DBColumn column, bool insertTypeName)
         {
