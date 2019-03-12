@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +27,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -55,17 +55,6 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="MyLibrary\DataBase\DBColumn.cs" />
-    <Compile Include="MyLibrary\DataBase\DBCommand.cs" />
-    <Compile Include="MyLibrary\DataBase\DBContext.cs" />
-    <Compile Include="MyLibrary\DataBase\DBInternal.cs" />
-    <Compile Include="MyLibrary\DataBase\DBModelBase.cs" />
-    <Compile Include="MyLibrary\DataBase\DBReader.cs" />
-    <Compile Include="MyLibrary\DataBase\DBRow.cs" />
-    <Compile Include="MyLibrary\DataBase\DBTable.cs" />
-    <Compile Include="MyLibrary\DataBase\FireBirdDBModel.cs" />
-    <Compile Include="MyLibrary\DataBase\Orm\DBOrmColumnAttribute.cs" />
-    <Compile Include="MyLibrary\DataBase\Orm\DBOrmTableBase.cs" />
     <Compile Include="OrmModelTextBuilder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -91,6 +80,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyLibrary\MyLibrary.csproj">
+      <Project>{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}</Project>
+      <Name>MyLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
