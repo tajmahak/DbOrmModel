@@ -30,6 +30,15 @@ namespace DbOrmModel
                 return _dbFilePath + ".usernames.txt";
             }
         }
+        private string DebugFilePath
+        {
+            get
+            {
+                if (_dbFilePath == null)
+                    return null;
+                return _dbFilePath + ".debug.txt";
+            }
+        }
 
         private string _dbFilePath;
         private string[] _args;
@@ -102,6 +111,10 @@ namespace DbOrmModel
         {
             Open(_dbFilePath);
         }
+        private void использоватьОтладочнуюИнформациюToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Open(_dbFilePath);
+        }
         private void создатьобновитьФайлыМетаданныхToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_dbFilePath == null)
@@ -112,6 +125,7 @@ namespace DbOrmModel
 
             string[] commentContent = null;
             string[] userNamesContent = null;
+            string[] debugContent = null;
             if (File.Exists(CommentFilePath))
             {
                 commentContent = File.ReadAllLines(CommentFilePath);
@@ -120,9 +134,14 @@ namespace DbOrmModel
             {
                 userNamesContent = File.ReadAllLines(UserNamesFilePath);
             }
+            if (File.Exists(DebugFilePath))
+            {
+                debugContent = File.ReadAllLines(DebugFilePath);
+            }
 
             commentContent = _builder.UpdateCommentContent(commentContent);
             userNamesContent = _builder.UpdateUserNamesContent(userNamesContent);
+            debugContent = _builder.UpdateDebugContent(debugContent);
 
             if (File.Exists(CommentFilePath))
             {
@@ -132,9 +151,14 @@ namespace DbOrmModel
             {
                 File.Delete(UserNamesFilePath);
             }
+            if (File.Exists(DebugFilePath))
+            {
+                File.Delete(DebugFilePath);
+            }
 
             File.WriteAllLines(CommentFilePath, commentContent, Encoding.UTF8);
             File.WriteAllLines(UserNamesFilePath, userNamesContent, Encoding.UTF8);
+            File.WriteAllLines(DebugFilePath, debugContent, Encoding.UTF8);
 
             WriteStatus("Создание/обновление файлов метаданных выполнено", false);
         }
@@ -179,6 +203,7 @@ namespace DbOrmModel
 
                 string[] commentContent = null;
                 string[] userNamesContent = null;
+                string[] debugNamesContent = null;
                 if (File.Exists(CommentFilePath))
                 {
                     commentContent = File.ReadAllLines(CommentFilePath);
@@ -187,12 +212,17 @@ namespace DbOrmModel
                 {
                     userNamesContent = File.ReadAllLines(UserNamesFilePath);
                 }
+                if (File.Exists(DebugFilePath))
+                {
+                    debugNamesContent = File.ReadAllLines(DebugFilePath);
+                }
                 _builder.PrepareCommentDictionary(commentContent);
                 _builder.PrepareUserNamesDictionary(userNamesContent);
-
+                _builder.PrepareDebugDictionary(debugNamesContent);
 
                 _builder.UseComments = использоватьКомментарииToolStripMenuItem.Checked;
                 _builder.UseUserNames = использоватьПользовательскиеИменаToolStripMenuItem.Checked;
+                _builder.UseDebug = использоватьОтладочнуюИнформациюToolStripMenuItem.Checked;
 
                 var dbText = _builder.CreateDbText();
                 var ormText = _builder.CreateOrmText();

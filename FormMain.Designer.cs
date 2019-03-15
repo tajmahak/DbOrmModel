@@ -49,6 +49,7 @@
             this.использоватьКомментарииToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьПользовательскиеИменаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -241,6 +242,7 @@
             this.дополнительноToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.использоватьКомментарииToolStripMenuItem,
             this.использоватьПользовательскиеИменаToolStripMenuItem,
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem,
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem});
             this.дополнительноToolStripMenuItem.Name = "дополнительноToolStripMenuItem";
             this.дополнительноToolStripMenuItem.Size = new System.Drawing.Size(107, 20);
@@ -252,7 +254,7 @@
             this.использоватьКомментарииToolStripMenuItem.CheckOnClick = true;
             this.использоватьКомментарииToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.использоватьКомментарииToolStripMenuItem.Name = "использоватьКомментарииToolStripMenuItem";
-            this.использоватьКомментарииToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.использоватьКомментарииToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
             this.использоватьКомментарииToolStripMenuItem.Text = "Использовать комментарии";
             this.использоватьКомментарииToolStripMenuItem.Click += new System.EventHandler(this.использоватьКомментарииToolStripMenuItem_Click);
             // 
@@ -262,16 +264,24 @@
             this.использоватьПользовательскиеИменаToolStripMenuItem.CheckOnClick = true;
             this.использоватьПользовательскиеИменаToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.использоватьПользовательскиеИменаToolStripMenuItem.Name = "использоватьПользовательскиеИменаToolStripMenuItem";
-            this.использоватьПользовательскиеИменаToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.использоватьПользовательскиеИменаToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
             this.использоватьПользовательскиеИменаToolStripMenuItem.Text = "Использовать пользовательские имена";
             this.использоватьПользовательскиеИменаToolStripMenuItem.Click += new System.EventHandler(this.использоватьПользовательскиеИменаToolStripMenuItem_Click);
             // 
             // создатьобновитьФайлыМетаданныхToolStripMenuItem
             // 
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Name = "создатьобновитьФайлыМетаданныхToolStripMenuItem";
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Text = "Создать/обновить файлы метаданных";
             this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Click += new System.EventHandler(this.создатьобновитьФайлыМетаданныхToolStripMenuItem_Click);
+            // 
+            // использоватьОтладочнуюИнформациюToolStripMenuItem
+            // 
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem.CheckOnClick = true;
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem.Name = "использоватьОтладочнуюИнформациюToolStripMenuItem";
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem.Text = "Использовать отладочную информацию";
+            this.использоватьОтладочнуюИнформациюToolStripMenuItem.Click += new System.EventHandler(this.использоватьОтладочнуюИнформациюToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -325,6 +335,7 @@
         private System.Windows.Forms.ToolStripMenuItem открытьToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem выходToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem использоватьОтладочнуюИнформациюToolStripMenuItem;
     }
 }
 

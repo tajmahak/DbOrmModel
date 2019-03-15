@@ -11,15 +11,18 @@ namespace DbOrmModel
         {
             _commentDictionary = new Dictionary<string, string>();
             _userNamesDictionary = new Dictionary<string, string>();
+            _debugDictionary = new Dictionary<string, string>();
             _model = model;
         }
 
         public bool UseComments { get; set; }
         public bool UseUserNames { get; set; }
+        public bool UseDebug { get; set; }
 
         private DBModelBase _model;
         private Dictionary<string, string> _commentDictionary;
         private Dictionary<string, string> _userNamesDictionary;
+        private Dictionary<string, string> _debugDictionary;
 
         public string CreateDbText()
         {
@@ -155,6 +158,15 @@ namespace DbOrmModel
                 str.Line(3, "Row = row;");
                 str.Line(2, "}");
 
+                if (UseDebug && _debugDictionary.ContainsKey(table.Name))
+                {
+                    str.AppendLine();
+                    str.Line(2, "public override string ToString()");
+                    str.Line(2, "{");
+                    str.Line(3, "return " + _debugDictionary[table.Name] + "" + ";");
+                    str.Line(2, "}");
+                }
+
                 str.Line(1, "}");
                 str.Line(1, "#endregion");
             }
@@ -202,6 +214,27 @@ namespace DbOrmModel
                     continue;
 
                 _userNamesDictionary.Add(text1, text2);
+            }
+        }
+        public void PrepareDebugDictionary(string[] content)
+        {
+            _debugDictionary.Clear();
+
+            if (content == null)
+                return;
+
+            foreach (var line in content)
+            {
+                string[] split = line.Split('\t');
+                if (split.Length != 2)
+                    continue;
+
+                var text1 = split[0].Trim();
+                var text2 = split[1].Trim();
+                if (text2.Length == 0)
+                    continue;
+
+                _debugDictionary.Add(text1, text2);
             }
         }
         public string[] UpdateCommentContent(string[] content)
@@ -278,6 +311,27 @@ namespace DbOrmModel
                         text.Append(fieldName);
                     }
                     text.AppendLine();
+                }
+            }
+            text.Remove(0, 2); // убирает первую пустую строку
+
+            // преобразование текста в массив строк
+            return text.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+        }
+        public string[] UpdateDebugContent(string[] content)
+        {
+            PrepareDebugDictionary(content);
+
+            string debug;
+
+            var text = new StringBuilder();
+            foreach (var table in _model.Tables)
+            {
+                text.AppendLine();
+                text.Append(table.Name + "\t");
+                if (_debugDictionary.TryGetValue(table.Name, out debug))
+                {
+                    text.Append(debug);
                 }
             }
             text.Remove(0, 2); // убирает первую пустую строку
