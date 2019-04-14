@@ -100,6 +100,8 @@ namespace DbOrmModel
                     tableName = _userNamesDictionary[tableName];
 
                 str.Line(1, "#region " + tableName);
+                str.AppendLine();
+
                 if (UseComments && _commentDictionary.TryGetValue(table.Name, out comment))
                 {
                     str.LineComment(1, comment);
@@ -130,6 +132,7 @@ namespace DbOrmModel
 
                     var constName = "__" + fieldName.ToLower();
 
+                    str.Line(2, "#region " + fieldName);
                     str.AppendLine();
 
                     str.Line(2, "private const string {0} = \"{1}.{2}\";", constName, table.Name, column.Name);
@@ -141,22 +144,22 @@ namespace DbOrmModel
 
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
-                    string setText = "Row.SetNotNull(" + constName + ", value);";
+                    string setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
                     InsertComment(str, 2, column, false);
                     propertyText = "public object _" + fieldName;
                     getText = "return Row[" + constName + "];";
-                    setText = "Row.SetNotNull(" + constName + ", value);";
+                    setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
+
+                    str.AppendLine();
+                    str.Line(2, "#endregion");
                 }
 
                 str.AppendLine();
 
-                str.Line(2, "public " + tableName + "(DBRow row)");
-                str.Line(2, "{");
-                str.Line(3, "Row = row;");
-                str.Line(2, "}");
+                str.Line(2, "public " + tableName + "(DBRow row) : base(row) { }");
 
                 if (UseDebug && _debugDictionary.ContainsKey(table.Name))
                 {
@@ -168,6 +171,8 @@ namespace DbOrmModel
                 }
 
                 str.Line(1, "}");
+
+                str.AppendLine();
                 str.Line(1, "#endregion");
             }
             str.Line(0, "}");
