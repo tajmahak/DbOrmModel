@@ -1,12 +1,13 @@
-﻿using System;
+﻿using DbOrmModel.Properties;
+using FirebirdSql.Data.FirebirdClient;
+using MyLibrary.DataBase;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using FirebirdSql.Data.FirebirdClient;
-using MyLibrary.DataBase;
 
 namespace DbOrmModel
 {
@@ -270,11 +271,18 @@ namespace DbOrmModel
             conBuilder.UserID = "SYSDBA";
             conBuilder.Password = "masterkey";
             conBuilder.Charset = "WIN1251";
-
-            conBuilder.ServerType = FbServerType.Default;
-            conBuilder.DataSource = "127.0.0.1";
             conBuilder.Database = path;
-            conBuilder.Port = 3050;
+
+            if (Settings.Default.UseEmbeddedServer == 0)
+            {
+                conBuilder.ServerType = FbServerType.Default;
+                conBuilder.DataSource = "127.0.0.1";
+            }
+            else
+            {
+                conBuilder.ServerType = FbServerType.Embedded;
+                conBuilder.ClientLibrary = Path.GetFullPath("fbclient\\fbembed.dll");
+            }
 
             var connection = new FbConnection(conBuilder.ToString());
             try

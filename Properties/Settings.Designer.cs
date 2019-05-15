@@ -22,5 +22,14 @@ namespace DbOrmModel.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public byte UseEmbeddedServer {
+            get {
+                return ((byte)(this["UseEmbeddedServer"]));
+            }
+        }
     }
 }
