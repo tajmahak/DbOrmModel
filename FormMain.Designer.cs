@@ -48,8 +48,9 @@
             this.дополнительноToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьКомментарииToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьПользовательскиеИменаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.использоватьОтладочнуюИнформациюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.обновитьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -90,9 +91,9 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33332F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
@@ -190,6 +191,7 @@
             // 
             this.файлToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.открытьToolStripMenuItem,
+            this.обновитьToolStripMenuItem,
             this.недавниеФайлыToolStripMenuItem,
             this.toolStripSeparator2,
             this.выходToolStripMenuItem});
@@ -243,7 +245,7 @@
             this.использоватьКомментарииToolStripMenuItem,
             this.использоватьПользовательскиеИменаToolStripMenuItem,
             this.использоватьОтладочнуюИнформациюToolStripMenuItem,
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem});
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem});
             this.дополнительноToolStripMenuItem.Name = "дополнительноToolStripMenuItem";
             this.дополнительноToolStripMenuItem.Size = new System.Drawing.Size(107, 20);
             this.дополнительноToolStripMenuItem.Text = "Дополнительно";
@@ -268,13 +270,6 @@
             this.использоватьПользовательскиеИменаToolStripMenuItem.Text = "Использовать пользовательские имена";
             this.использоватьПользовательскиеИменаToolStripMenuItem.Click += new System.EventHandler(this.использоватьПользовательскиеИменаToolStripMenuItem_Click);
             // 
-            // создатьобновитьФайлыМетаданныхToolStripMenuItem
-            // 
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Name = "создатьобновитьФайлыМетаданныхToolStripMenuItem";
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Text = "Создать/обновить файлы метаданных";
-            this.создатьобновитьФайлыМетаданныхToolStripMenuItem.Click += new System.EventHandler(this.создатьобновитьФайлыМетаданныхToolStripMenuItem_Click);
-            // 
             // использоватьОтладочнуюИнформациюToolStripMenuItem
             // 
             this.использоватьОтладочнуюИнформациюToolStripMenuItem.CheckOnClick = true;
@@ -282,6 +277,20 @@
             this.использоватьОтладочнуюИнформациюToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
             this.использоватьОтладочнуюИнформациюToolStripMenuItem.Text = "Использовать отладочную информацию";
             this.использоватьОтладочнуюИнформациюToolStripMenuItem.Click += new System.EventHandler(this.использоватьОтладочнуюИнформациюToolStripMenuItem_Click);
+            // 
+            // создатьобновитьФайлМетаданныхToolStripMenuItem
+            // 
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem.Name = "создатьобновитьФайлМетаданныхToolStripMenuItem";
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem.Size = new System.Drawing.Size(301, 22);
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem.Text = "Создать/обновить файл метаданных";
+            this.создатьобновитьФайлМетаданныхToolStripMenuItem.Click += new System.EventHandler(this.создатьобновитьФайлМетаданныхToolStripMenuItem_Click);
+            // 
+            // обновитьToolStripMenuItem
+            // 
+            this.обновитьToolStripMenuItem.Name = "обновитьToolStripMenuItem";
+            this.обновитьToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.обновитьToolStripMenuItem.Text = "Обновить";
+            this.обновитьToolStripMenuItem.Click += new System.EventHandler(this.обновитьToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -328,7 +337,7 @@
         private System.Windows.Forms.ToolStripMenuItem дополнительноToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьКомментарииToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьПользовательскиеИменаToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлыМетаданныхToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem создатьобновитьФайлМетаданныхToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem недавниеФайлыToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem очиститьСписокToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -336,6 +345,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem выходToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem использоватьОтладочнуюИнформациюToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem обновитьToolStripMenuItem;
     }
 }
 

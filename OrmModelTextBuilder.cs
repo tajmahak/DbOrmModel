@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MyLibrary.DataBase;
 using System.Text;
-using MyLibrary.DataBase;
 
 namespace DbOrmModel
 {
@@ -9,42 +7,33 @@ namespace DbOrmModel
     {
         public OrmModelTextBuilder(DBModelBase model)
         {
-            _commentDictionary = new Dictionary<string, string>();
-            _userNamesDictionary = new Dictionary<string, string>();
-            _debugDictionary = new Dictionary<string, string>();
-            _model = model;
+            Model = model;
         }
 
-        public bool UseComments { get; set; }
-        public bool UseUserNames { get; set; }
-        public bool UseDebug { get; set; }
+        public DBModelBase Model { get; private set; }
 
-        private DBModelBase _model;
-        private Dictionary<string, string> _commentDictionary;
-        private Dictionary<string, string> _userNamesDictionary;
-        private Dictionary<string, string> _debugDictionary;
-
-        public string CreateDbText()
+        public string CreateDbText(MetaManager meta)
         {
-            string comment;
             var str = new StringBuilder();
 
             str.Line(0, "namespace DB");
             str.AppendLine("{");
 
-            for (int i = 0; i < _model.Tables.Length; i++)
+            for (int i = 0; i < Model.Tables.Length; i++)
             {
-                var table = _model.Tables[i];
+                var table = Model.Tables[i];
 
                 var tableName = table.Name;
-                if (UseUserNames && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
+                if (meta.ContainsUserName(table.Name))
+                {
+                    tableName = meta.GetUserName(table.Name);
+                }
 
                 str.Line(1, "#region " + tableName);
 
-                if (UseComments && _commentDictionary.TryGetValue(table.Name, out comment))
+                if (meta.ContainsComment(table.Name))
                 {
-                    str.LineComment(1, comment);
+                    str.LineComment(1, meta.GetComment(table.Name));
                 }
 
                 str.Line(1, "public static class " + tableName);
@@ -56,9 +45,9 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (UseUserNames && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    if (meta.ContainsUserName(table.Name + "." + column.Name))
                     {
-                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
+                        fieldName = meta.GetUserName(table.Name + "." + column.Name);
                     }
                     else
                     {
@@ -68,7 +57,7 @@ namespace DbOrmModel
                         }
                     }
 
-                    InsertComment(str, 2, column, true);
+                    InsertComment(meta, str, 2, column, true);
                     str.Line(2, "public const string {0} = \"{1}.{2}\";", fieldName, table.Name, column.Name);
                 }
                 str.Line(1, "}");
@@ -78,9 +67,8 @@ namespace DbOrmModel
 
             return str.ToString();
         }
-        public string CreateOrmText()
+        public string CreateOrmText(MetaManager meta)
         {
-            string comment;
             var str = new StringBuilder();
 
             str.Line(0, "namespace ORM");
@@ -91,20 +79,22 @@ namespace DbOrmModel
             str.Line(1, "using MyLibrary.DataBase.Orm;");
             str.AppendLine();
 
-            for (int i = 0; i < _model.Tables.Length; i++)
+            for (int i = 0; i < Model.Tables.Length; i++)
             {
-                var table = _model.Tables[i];
+                var table = Model.Tables[i];
 
                 var tableName = table.Name;
-                if (UseUserNames && _userNamesDictionary.ContainsKey(tableName))
-                    tableName = _userNamesDictionary[tableName];
+                if (meta.ContainsUserName(table.Name))
+                {
+                    tableName = meta.GetUserName(table.Name);
+                }
 
                 str.Line(1, "#region " + tableName);
                 str.AppendLine();
 
-                if (UseComments && _commentDictionary.TryGetValue(table.Name, out comment))
+                if (meta.ContainsComment(table.Name))
                 {
-                    str.LineComment(1, comment);
+                    str.LineComment(1, meta.GetComment(table.Name));
                 }
 
                 str.Line(1, "[DBOrmTable(\"" + table.Name + "\")]");
@@ -118,9 +108,9 @@ namespace DbOrmModel
                     var column = table.Columns[j];
 
                     var fieldName = column.Name;
-                    if (UseUserNames && _userNamesDictionary.ContainsKey(table.Name + "." + column.Name))
+                    if (meta.ContainsUserName(table.Name + "." + column.Name))
                     {
-                        fieldName = _userNamesDictionary[table.Name + "." + column.Name];
+                        fieldName = meta.GetUserName(table.Name + "." + column.Name);
                     }
                     else
                     {
@@ -137,7 +127,7 @@ namespace DbOrmModel
 
                     str.Line(2, "private const string {0} = \"{1}.{2}\";", constName, table.Name, column.Name);
 
-                    InsertComment(str, 2, column, false);
+                    InsertComment(meta, str, 2, column, false);
                     string objectType = GetObjectType(column);
 
                     str.Line(2, "[DBOrmColumn(" + constName + ")]");
@@ -147,7 +137,7 @@ namespace DbOrmModel
                     string setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
-                    InsertComment(str, 2, column, false);
+                    InsertComment(meta, str, 2, column, false);
                     propertyText = "public object _" + fieldName;
                     getText = "return Row[" + constName + "];";
                     setText = "Row[" + constName + "] = value;";
@@ -161,12 +151,12 @@ namespace DbOrmModel
 
                 str.Line(2, "public " + tableName + "(DBRow row) : base(row) { }");
 
-                if (UseDebug && _debugDictionary.ContainsKey(table.Name))
+                if (meta.ContainsDebugInfo(table.Name))
                 {
                     str.AppendLine();
                     str.Line(2, "public override string ToString()");
                     str.Line(2, "{");
-                    str.Line(3, "return " + _debugDictionary[table.Name] + "" + ";");
+                    str.Line(3, "return " + meta.GetDebugInfo(table.Name) + "" + ";");
                     str.Line(2, "}");
                 }
 
@@ -179,183 +169,18 @@ namespace DbOrmModel
 
             return str.ToString();
         }
-        public void PrepareCommentDictionary(string[] content)
+
+        private void InsertComment(MetaManager meta, StringBuilder str, int level, DBColumn column, bool insertTypeName)
         {
-            _commentDictionary.Clear();
-
-            if (content == null)
-                return;
-
-            foreach (var line in content)
-            {
-                string[] split = line.Split('\t');
-                if (split.Length != 2)
-                    continue;
-
-                var text1 = split[0].Trim();
-                var text2 = split[1].Trim();
-                if (text2.Length == 0)
-                    continue;
-
-                _commentDictionary.Add(text1, text2);
-            }
-        }
-        public void PrepareUserNamesDictionary(string[] content)
-        {
-            _userNamesDictionary.Clear();
-
-            if (content == null)
-                return;
-
-            foreach (var line in content)
-            {
-                string[] split = line.Split('\t');
-                if (split.Length != 2)
-                    continue;
-
-                var text1 = split[0].Trim();
-                var text2 = split[1].Trim();
-                if (text2.Length == 0)
-                    continue;
-
-                _userNamesDictionary.Add(text1, text2);
-            }
-        }
-        public void PrepareDebugDictionary(string[] content)
-        {
-            _debugDictionary.Clear();
-
-            if (content == null)
-                return;
-
-            foreach (var line in content)
-            {
-                string[] split = line.Split('\t');
-                if (split.Length != 2)
-                    continue;
-
-                var text1 = split[0].Trim();
-                var text2 = split[1].Trim();
-                if (text2.Length == 0)
-                    continue;
-
-                _debugDictionary.Add(text1, text2);
-            }
-        }
-        public string[] UpdateCommentContent(string[] content)
-        {
-            PrepareCommentDictionary(content);
-
-            string comment;
-
-            var text = new StringBuilder();
-            foreach (var table in _model.Tables)
-            {
-                text.AppendLine();
-                text.Append(table.Name + "\t");
-                if (_commentDictionary.TryGetValue(table.Name, out comment))
-                {
-                    text.Append(comment);
-                }
-                text.AppendLine();
-
-                foreach (var column in table.Columns)
-                {
-                    var columnName = table.Name + "." + column.Name;
-                    text.Append(columnName + "\t");
-                    if (_commentDictionary.TryGetValue(columnName, out comment))
-                    {
-                        text.Append(comment);
-                    }
-                    text.AppendLine();
-                }
-            }
-            text.Remove(0, 2); // убирает первую пустую строку
-
-            // преобразование текста в массив строк
-            return text.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-        }
-        public string[] UpdateUserNamesContent(string[] content)
-        {
-            PrepareUserNamesDictionary(content);
-
-            string userName;
-
-            var text = new StringBuilder();
-            foreach (var table in _model.Tables)
-            {
-                text.AppendLine();
-                text.Append(table.Name + "\t");
-
-                if (_userNamesDictionary.TryGetValue(table.Name, out userName))
-                {
-                    text.Append(userName);
-                }
-                else
-                {
-                    text.Append(table.Name);
-                }
-
-                text.AppendLine();
-
-                foreach (var column in table.Columns)
-                {
-                    var columnName = table.Name + "." + column.Name;
-                    text.Append(columnName + "\t");
-
-                    var fieldName = column.Name;
-                    if (fieldName.StartsWith(table.Name))
-                        fieldName = fieldName.Remove(0, table.Name.Length + 1);
-
-                    if (_userNamesDictionary.TryGetValue(columnName, out userName))
-                    {
-                        text.Append(userName);
-                    }
-                    else
-                    {
-                        text.Append(fieldName);
-                    }
-                    text.AppendLine();
-                }
-            }
-            text.Remove(0, 2); // убирает первую пустую строку
-
-            // преобразование текста в массив строк
-            return text.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-        }
-        public string[] UpdateDebugContent(string[] content)
-        {
-            PrepareDebugDictionary(content);
-
-            string debug;
-
-            var text = new StringBuilder();
-            foreach (var table in _model.Tables)
-            {
-                text.AppendLine();
-                text.Append(table.Name + "\t");
-                if (_debugDictionary.TryGetValue(table.Name, out debug))
-                {
-                    text.Append(debug);
-                }
-            }
-            text.Remove(0, 2); // убирает первую пустую строку
-
-            // преобразование текста в массив строк
-            return text.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-        }
-
-        private void InsertComment(StringBuilder str, int level, DBColumn column, bool insertTypeName)
-        {
-            if (!UseComments)
+            if (!meta.UseComments)
                 return;
 
             var columnName = column.Table.Name + "." + column.Name;
 
             string comment = string.Empty;
-            if (_commentDictionary.ContainsKey(columnName))
+            if (meta.ContainsComment(columnName))
             {
-                comment += _commentDictionary[columnName];
+                comment += meta.GetComment(columnName);
             }
             if (insertTypeName)
             {

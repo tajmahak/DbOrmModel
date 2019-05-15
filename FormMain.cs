@@ -12,37 +12,20 @@ namespace DbOrmModel
 {
     public partial class FormMain : Form
     {
-        private string CommentFilePath
+        private string MetaFilePath
         {
             get
             {
                 if (_dbFilePath == null)
                     return null;
-                return _dbFilePath + ".comment.txt";
-            }
-        }
-        private string UserNamesFilePath
-        {
-            get
-            {
-                if (_dbFilePath == null)
-                    return null;
-                return _dbFilePath + ".usernames.txt";
-            }
-        }
-        private string DebugFilePath
-        {
-            get
-            {
-                if (_dbFilePath == null)
-                    return null;
-                return _dbFilePath + ".debug.txt";
+                return _dbFilePath + ".meta.txt";
             }
         }
 
         private string _dbFilePath;
         private string[] _args;
         private OrmModelTextBuilder _builder;
+        private MetaManager _metaManager = new MetaManager();
         private List<string> _recentList;
         private const string _recentFilePath = "recent.txt";
         private const int _recentFileCount = 10;
@@ -55,6 +38,16 @@ namespace DbOrmModel
 
             UpdateRecentList();
             WriteStatus(string.Empty, false);
+        }
+
+        private void UpdateInfo()
+        {
+            if (_dbFilePath == null)
+            {
+                WriteStatus("База данных не открыта", true);
+                return;
+            }
+            Open(_dbFilePath);
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -87,6 +80,10 @@ namespace DbOrmModel
                 Open(dialog.FileName);
             }
         }
+        private void обновитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateInfo();
+        }
         private void recentToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem recentItem = (ToolStripMenuItem)sender;
@@ -105,17 +102,17 @@ namespace DbOrmModel
         }
         private void использоватьКомментарииToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Open(_dbFilePath);
+            UpdateInfo();
         }
         private void использоватьПользовательскиеИменаToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Open(_dbFilePath);
+            UpdateInfo();
         }
         private void использоватьОтладочнуюИнформациюToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Open(_dbFilePath);
+            UpdateInfo();
         }
-        private void создатьобновитьФайлыМетаданныхToolStripMenuItem_Click(object sender, EventArgs e)
+        private void создатьобновитьФайлМетаданныхToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_dbFilePath == null)
             {
@@ -123,42 +120,13 @@ namespace DbOrmModel
                 return;
             }
 
-            string[] commentContent = null;
-            string[] userNamesContent = null;
-            string[] debugContent = null;
-            if (File.Exists(CommentFilePath))
+            if (File.Exists(MetaFilePath))
             {
-                commentContent = File.ReadAllLines(CommentFilePath);
-            }
-            if (File.Exists(UserNamesFilePath))
-            {
-                userNamesContent = File.ReadAllLines(UserNamesFilePath);
-            }
-            if (File.Exists(DebugFilePath))
-            {
-                debugContent = File.ReadAllLines(DebugFilePath);
+                File.Delete(MetaFilePath);
             }
 
-            commentContent = _builder.UpdateCommentContent(commentContent);
-            userNamesContent = _builder.UpdateUserNamesContent(userNamesContent);
-            debugContent = _builder.UpdateDebugContent(debugContent);
-
-            if (File.Exists(CommentFilePath))
-            {
-                File.Delete(CommentFilePath);
-            }
-            if (File.Exists(UserNamesFilePath))
-            {
-                File.Delete(UserNamesFilePath);
-            }
-            if (File.Exists(DebugFilePath))
-            {
-                File.Delete(DebugFilePath);
-            }
-
-            File.WriteAllLines(CommentFilePath, commentContent, Encoding.UTF8);
-            File.WriteAllLines(UserNamesFilePath, userNamesContent, Encoding.UTF8);
-            File.WriteAllLines(DebugFilePath, debugContent, Encoding.UTF8);
+            var content = _metaManager.UploadInfo(_builder.Model);
+            File.WriteAllLines(MetaFilePath, content, Encoding.UTF8);
 
             WriteStatus("Создание/обновление файлов метаданных выполнено", false);
         }
@@ -199,39 +167,30 @@ namespace DbOrmModel
                     _builder = InitializeBuilder(databasePath);
                 }
                 _dbFilePath = databasePath;
+                AddToRecentList(_dbFilePath);
 
+                _metaManager.Clear();
+                _metaManager.UseComments = использоватьКомментарииToolStripMenuItem.Checked;
+                _metaManager.UseUserNames = использоватьПользовательскиеИменаToolStripMenuItem.Checked;
+                _metaManager.UseDebugInfo = использоватьОтладочнуюИнформациюToolStripMenuItem.Checked;
 
-                string[] commentContent = null;
-                string[] userNamesContent = null;
-                string[] debugNamesContent = null;
-                if (File.Exists(CommentFilePath))
+                if (File.Exists(MetaFilePath))
                 {
-                    commentContent = File.ReadAllLines(CommentFilePath);
+                    var content = File.ReadAllLines(MetaFilePath);
+                    _metaManager.LoadInfo(_builder.Model, content);
                 }
-                if (File.Exists(UserNamesFilePath))
+                else
                 {
-                    userNamesContent = File.ReadAllLines(UserNamesFilePath);
+                    _metaManager.LoadInfo(_builder.Model, null);
                 }
-                if (File.Exists(DebugFilePath))
-                {
-                    debugNamesContent = File.ReadAllLines(DebugFilePath);
-                }
-                _builder.PrepareCommentDictionary(commentContent);
-                _builder.PrepareUserNamesDictionary(userNamesContent);
-                _builder.PrepareDebugDictionary(debugNamesContent);
 
-                _builder.UseComments = использоватьКомментарииToolStripMenuItem.Checked;
-                _builder.UseUserNames = использоватьПользовательскиеИменаToolStripMenuItem.Checked;
-                _builder.UseDebug = использоватьОтладочнуюИнформациюToolStripMenuItem.Checked;
-
-                var dbText = _builder.CreateDbText();
-                var ormText = _builder.CreateOrmText();
+                var dbText = _builder.CreateDbText(_metaManager);
+                var ormText = _builder.CreateOrmText(_metaManager);
 
                 textBox1.Text = dbText;
                 textBox2.Text = ormText;
                 textBox3.Text = dbText + Environment.NewLine + ormText;
 
-                AddToRecentList(_dbFilePath);
                 WriteStatus(_dbFilePath, false);
             }
             catch (Exception ex)
