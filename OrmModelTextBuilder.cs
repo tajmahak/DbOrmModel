@@ -97,7 +97,7 @@ namespace DbOrmModel
                     str.LineComment(1, meta.GetComment(table.Name));
                 }
 
-                str.Line(1, "[DBOrmTable(\"" + table.Name + "\")]");
+                str.Line(1, "[DBOrmTable(DB." + tableName + "._)]");
                 str.Line(1, "public class " + tableName + ": DBOrmTableBase");
                 str.Line(1, "{");
 
