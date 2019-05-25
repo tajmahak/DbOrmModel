@@ -74,9 +74,9 @@ namespace DbOrmModel
             str.Line(0, "namespace ORM");
             str.AppendLine("{");
 
-            str.Line(1, "using System;");
             str.Line(1, "using MyLibrary.DataBase;");
             str.Line(1, "using MyLibrary.DataBase.Orm;");
+            str.Line(1, "using System;");
             str.AppendLine();
 
             for (int i = 0; i < Model.Tables.Length; i++)
@@ -120,12 +120,10 @@ namespace DbOrmModel
                         }
                     }
 
-                    var constName = "__" + fieldName.ToLower();
+                    var constName = "DB." + tableName + "." + fieldName;
 
                     str.Line(2, "#region " + fieldName);
                     str.AppendLine();
-
-                    str.Line(2, "private const string {0} = \"{1}.{2}\";", constName, table.Name, column.Name);
 
                     InsertComment(meta, str, 2, column, false);
                     string objectType = GetObjectType(column);
