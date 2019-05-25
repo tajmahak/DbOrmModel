@@ -128,7 +128,26 @@ namespace DbOrmModel
                     InsertComment(meta, str, 2, column, false);
                     string objectType = GetObjectType(column);
 
-                    str.Line(2, "[DBOrmColumn(" + constName + ")]");
+
+                    if (meta.ContainsForeignKey(table.Name + "." + column.Name))
+                    {
+                        var foreignKey = meta.GetForeignKeyInfo(table.Name + "." + column.Name);
+                        var split = foreignKey.Split('.');
+
+                        if (meta.ContainsUserName(split[0] + "." + split[1]))
+                        {
+                            split[1] = meta.GetUserName(split[0] + "." + split[1]);
+                        }
+                        if (meta.ContainsUserName(split[0]))
+                        {
+                            split[0] = meta.GetUserName(split[0]);
+                        }
+                        str.Line(2, "[DBOrmColumn(" + constName + ", DB." + split[0] + "." + split[1] + ")]");
+                    }
+                    else
+                    {
+                        str.Line(2, "[DBOrmColumn(" + constName + ")]");
+                    }
 
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";

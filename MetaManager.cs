@@ -75,7 +75,10 @@ namespace DbOrmModel
                             item.Comment = split[2];
 
                         if (split.Length > 3)
-                            item.DebugInfo = split[3];
+                            item.ForeignKey = split[3];
+
+                        if (split.Length > 4)
+                            item.DebugInfo = split[4];
                     }
                 }
             }
@@ -97,6 +100,14 @@ namespace DbOrmModel
             }
             return false;
         }
+        public bool ContainsForeignKey(string tableName)
+        {
+            if (_dict.ContainsKey(tableName))
+            {
+                return (_dict[tableName].ForeignKey != string.Empty);
+            }
+            return false;
+        }
         public bool ContainsDebugInfo(string tableName)
         {
             if (UseDebugInfo && _dict.ContainsKey(tableName))
@@ -114,6 +125,10 @@ namespace DbOrmModel
         {
             return _dict[tableName].Comment;
         }
+        public string GetForeignKeyInfo(string tableName)
+        {
+            return _dict[tableName].ForeignKey;
+        }
         public string GetDebugInfo(string tableName)
         {
             return _dict[tableName].DebugInfo;
@@ -122,7 +137,7 @@ namespace DbOrmModel
 
         private string CreateHeaderLine()
         {
-            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Отладочная информация";
+            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Внешний ключ" + "\t" + "#Отладочная информация";
         }
         private string CreateContentLine(string key, MetaItem item)
         {
@@ -148,7 +163,7 @@ namespace DbOrmModel
                 }
             }
 
-            return key + "\t" + userName + "\t" + item.Comment + "\t" + item.DebugInfo;
+            return key + "\t" + userName + "\t" + item.Comment + "\t" + item.ForeignKey + "\t" + item.DebugInfo;
         }
         private string PrepareFieldName(string value)
         {
@@ -174,6 +189,7 @@ namespace DbOrmModel
         {
             public string UserName = string.Empty;
             public string Comment = string.Empty;
+            public string ForeignKey = string.Empty;
             public string DebugInfo = string.Empty;
         }
     }
