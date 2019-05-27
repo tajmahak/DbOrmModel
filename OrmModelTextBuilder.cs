@@ -40,7 +40,7 @@ namespace DbOrmModel
                 str.Line(1, "{");
 
                 str.Line(2, "public const string _ = \"{0}\";", table.Name);
-                for (int j = 0; j < table.Columns.Length; j++)
+                for (int j = 0; j < table.Columns.Count; j++)
                 {
                     var column = table.Columns[j];
 
@@ -103,7 +103,7 @@ namespace DbOrmModel
 
                 str.LineProperty(2, "public string _", "return Row.Table.Name;", null);
 
-                for (int j = 0; j < table.Columns.Length; j++)
+                for (int j = 0; j < table.Columns.Count; j++)
                 {
                     var column = table.Columns[j];
 
@@ -128,7 +128,22 @@ namespace DbOrmModel
                     InsertComment(meta, str, 2, column, false);
                     string objectType = GetObjectType(column);
 
-
+                    string attrAllowDbNull = string.Empty;
+                    #region
+                    if (column.AllowDBNull == false)
+                    {
+                        attrAllowDbNull = ", AllowDbNull: false";
+                    }
+                    #endregion
+                    string attrIsPrimaryKey = string.Empty;
+                    #region
+                    if (column.IsPrimary)
+                    {
+                        attrIsPrimaryKey = ", PrimaryKey: true";
+                    }
+                    #endregion
+                    string attrForeignKey = string.Empty;
+                    #region
                     if (meta.ContainsForeignKey(table.Name + "." + column.Name))
                     {
                         var foreignKey = meta.GetForeignKeyInfo(table.Name + "." + column.Name);
@@ -142,12 +157,12 @@ namespace DbOrmModel
                         {
                             split[0] = meta.GetUserName(split[0]);
                         }
-                        str.Line(2, "[DBOrmColumn(" + constName + ", DB." + split[0] + "." + split[1] + ")]");
+
+                        attrForeignKey = ", ForeignKey: DB." + split[0] + "." + split[1];
                     }
-                    else
-                    {
-                        str.Line(2, "[DBOrmColumn(" + constName + ")]");
-                    }
+                    #endregion
+
+                    str.Line(2, "[DBOrmColumn(" + constName + attrAllowDbNull + attrIsPrimaryKey + attrForeignKey + ")]");
 
                     string propertyText = "public " + objectType + " " + fieldName;
                     string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
