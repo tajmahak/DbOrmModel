@@ -225,15 +225,15 @@ namespace DbOrmModel
         private string GetCommentObjectType(DBColumn column)
         {
             string objectType;
-            if (column.Comment != null)
+            if (column.Description != null)
             {
-                if (column.Comment == "BOOLEAN")
+                if (column.Description == "BOOLEAN")
                 {
                     objectType = typeof(bool).Name;
                 }
                 else
                 {
-                    objectType = column.Comment;
+                    objectType = column.Description;
                 }
             }
             else
@@ -270,15 +270,15 @@ namespace DbOrmModel
         private string GetObjectType(DBColumn column)
         {
             string objectType;
-            if (column.Comment != null)
+            if (column.Description != null)
             {
-                if (column.Comment == "BOOLEAN")
+                if (column.Description == "BOOLEAN")
                 {
                     objectType = typeof(bool).Name;
                 }
                 else
                 {
-                    objectType = column.Comment;
+                    objectType = column.Description;
                 }
             }
             else
