@@ -75,7 +75,6 @@ namespace DbOrmModel
             str.AppendLine("{");
 
             str.Line(1, "using MyLibrary.DataBase;");
-            str.Line(1, "using MyLibrary.DataBase.Orm;");
             str.Line(1, "using System;");
             str.AppendLine();
 
