@@ -19,7 +19,7 @@ namespace DbOrmModel
             str.Line(0, "namespace DB");
             str.AppendLine("{");
 
-            for (int i = 0; i < Model.Tables.Length; i++)
+            for (int i = 0; i < Model.Tables.Count; i++)
             {
                 var table = Model.Tables[i];
 
@@ -78,7 +78,7 @@ namespace DbOrmModel
             str.Line(1, "using System;");
             str.AppendLine();
 
-            for (int i = 0; i < Model.Tables.Length; i++)
+            for (int i = 0; i < Model.Tables.Count; i++)
             {
                 var table = Model.Tables[i];
 
@@ -125,13 +125,13 @@ namespace DbOrmModel
                     str.AppendLine();
 
                     InsertComment(meta, str, 2, column, false);
-                    string objectType = GetObjectType(column);
+                    string typeName = GetTypeName(column);
 
                     string attrAllowDbNull = string.Empty;
                     #region
-                    if (column.AllowDBNull == false)
+                    if (column.NotNull)
                     {
-                        attrAllowDbNull = ", AllowDbNull: false";
+                        attrAllowDbNull = ", NotNull: true";
                     }
                     #endregion
                     string attrIsPrimaryKey = string.Empty;
@@ -163,8 +163,8 @@ namespace DbOrmModel
 
                     str.Line(2, "[DBOrmColumn(" + constName + attrAllowDbNull + attrIsPrimaryKey + attrForeignKey + ")]");
 
-                    string propertyText = "public " + objectType + " " + fieldName;
-                    string getText = "return Row.Get<" + objectType + ">(" + constName + ");";
+                    string propertyText = "public " + typeName + " " + fieldName;
+                    string getText = "return Row.Get<" + typeName + ">(" + constName + ");";
                     string setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
@@ -261,35 +261,52 @@ namespace DbOrmModel
                 case "Decimal": objectType = "decimal"; break;
             }
 
-            if (column.AllowDBNull)
+            if (!column.NotNull)
             {
                 objectType += "?";
             }
             return objectType;
         }
-        private string GetObjectType(DBColumn column)
+        private string GetTypeName(DBColumn column)
         {
-            string objectType;
+            var type = column.DataType;
+
+            string typeName;
             if (column.Description != null)
             {
                 if (column.Description == "BOOLEAN")
                 {
-                    objectType = typeof(bool).Name;
+                    typeName = typeof(bool).Name;
                 }
                 else
                 {
-                    objectType = column.Description;
+                    typeName = column.Description;
                 }
             }
             else
             {
-                objectType = column.DataType.Name;
+                if (type == typeof(bool)) typeName = "bool";
+                else if (type == typeof(byte)) typeName = "byte";
+                else if (type == typeof(char)) typeName = "char";
+                else if (type == typeof(decimal)) typeName = "decimal";
+                else if (type == typeof(double)) typeName = "double";
+                else if (type == typeof(float)) typeName = "float";
+                else if (type == typeof(int)) typeName = "int";
+                else if (type == typeof(long)) typeName = "long";
+                else if (type == typeof(sbyte)) typeName = "sbyte";
+                else if (type == typeof(short)) typeName = "short";
+                else if (type == typeof(string)) typeName = "string";
+                else if (type == typeof(uint)) typeName = "uint";
+                else if (type == typeof(ulong)) typeName = "ulong";
+                else if (type == typeof(ushort)) typeName = "ushort";
+                else typeName = type.Name;
             }
-            if (column.AllowDBNull && !column.DataType.IsClass)
+
+            if (!column.NotNull && !column.DataType.IsClass)
             {
-                objectType = "Nullable<" + objectType + ">";
+                typeName += "?";
             }
-            return objectType;
+            return typeName;
         }
     }
 }
