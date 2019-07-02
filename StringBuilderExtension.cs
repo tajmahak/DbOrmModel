@@ -15,22 +15,18 @@ namespace DbOrmModel
         }
         public static void LineProperty(this StringBuilder str, int level, string text, string getText, string setText)
         {
-            str.Line(level, text);
-            str.Line(level, "{");
-
-            str.Line(level + 1, "get");
-            str.Line(level + 1, "{");
-            str.Line(level + 2, getText);
-            str.Line(level + 1, "}");
-
-            if (setText != null)
+            if (setText == null)
             {
-                str.Line(level + 1, "set");
-                str.Line(level + 1, "{");
-                str.Line(level + 2, setText);
-                str.Line(level + 1, "}");
+                str.Line(level, text + " => " + getText);
             }
-            str.Line(level, "}");
+            else
+            {
+                str.Line(level, text);
+                str.Line(level, "{");
+                str.Line(level + 1, "get => " + getText);
+                str.Line(level + 1, "set => " + setText);
+                str.Line(level, "}");
+            }
         }
         public static void LineComment(this StringBuilder str, int level, string text)
         {

@@ -100,7 +100,7 @@ namespace DbOrmModel
                 str.Line(1, "public class " + tableName + ": DBOrmTableBase");
                 str.Line(1, "{");
 
-                str.LineProperty(2, "public string _", "return Row.Table.Name;", null);
+                str.LineProperty(2, "public string _", "Row.Table.Name;", null);
 
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
@@ -164,13 +164,13 @@ namespace DbOrmModel
                     str.Line(2, "[DBOrmColumn(" + constName + attrAllowDbNull + attrIsPrimaryKey + attrForeignKey + ")]");
 
                     string propertyText = "public " + typeName + " " + fieldName;
-                    string getText = "return Row.Get<" + typeName + ">(" + constName + ");";
+                    string getText = "Row.Get<" + typeName + ">(" + constName + ");";
                     string setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
                     InsertComment(meta, str, 2, column, false);
                     propertyText = "public object _" + fieldName;
-                    getText = "return Row[" + constName + "];";
+                    getText = "Row[" + constName + "];";
                     setText = "Row[" + constName + "] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
