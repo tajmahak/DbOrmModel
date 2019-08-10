@@ -3,7 +3,7 @@ using System.Text;
 
 namespace DbOrmModel
 {
-    class OrmModelTextBuilder
+    internal class OrmModelTextBuilder
     {
         public OrmModelTextBuilder(DBModelBase model)
         {
@@ -19,7 +19,7 @@ namespace DbOrmModel
             str.Line(0, "namespace DB");
             str.AppendLine("{");
 
-            for (int i = 0; i < Model.Tables.Count; i++)
+            for (var i = 0; i < Model.Tables.Count; i++)
             {
                 var table = Model.Tables[i];
 
@@ -29,18 +29,18 @@ namespace DbOrmModel
                     tableName = meta.GetUserName(table.Name);
                 }
 
-                str.Line(1, "#region " + tableName);
+                str.Line(1, $"#region {tableName}");
 
                 if (meta.ContainsComment(table.Name))
                 {
                     str.LineComment(1, meta.GetComment(table.Name));
                 }
 
-                str.Line(1, "public static class " + tableName);
+                str.Line(1, $"public static class {tableName}");
                 str.Line(1, "{");
 
-                str.Line(2, "public const string _ = \"{0}\";", table.Name);
-                for (int j = 0; j < table.Columns.Count; j++)
+                str.Line(2, $"public const string _ = \"{table.Name}\";");
+                for (var j = 0; j < table.Columns.Count; j++)
                 {
                     var column = table.Columns[j];
 
@@ -58,7 +58,7 @@ namespace DbOrmModel
                     }
 
                     InsertComment(meta, str, 2, column, true);
-                    str.Line(2, "public const string {0} = \"{1}.{2}\";", fieldName, table.Name, column.Name);
+                    str.Line(2, $"public const string {fieldName} = \"{table.Name}.{column.Name}\";");
                 }
                 str.Line(1, "}");
                 str.Line(1, "#endregion");
@@ -78,7 +78,7 @@ namespace DbOrmModel
             str.Line(1, "using System;");
             str.AppendLine();
 
-            for (int i = 0; i < Model.Tables.Count; i++)
+            for (var i = 0; i < Model.Tables.Count; i++)
             {
                 var table = Model.Tables[i];
 
@@ -88,7 +88,7 @@ namespace DbOrmModel
                     tableName = meta.GetUserName(table.Name);
                 }
 
-                str.Line(1, "#region " + tableName);
+                str.Line(1, $"#region {tableName}");
                 str.AppendLine();
 
                 if (meta.ContainsComment(table.Name))
@@ -96,13 +96,13 @@ namespace DbOrmModel
                     str.LineComment(1, meta.GetComment(table.Name));
                 }
 
-                str.Line(1, "[DBOrmTable(DB." + tableName + "._)]");
-                str.Line(1, "public class " + tableName + ": DBOrmTableBase");
+                str.Line(1, $"[DBOrmTable(DB.{tableName}._)]");
+                str.Line(1, $"public class {tableName}: DBOrmTableBase");
                 str.Line(1, "{");
 
                 str.LineProperty(2, "public string _", "Row.Table.Name;", null);
 
-                for (int j = 0; j < table.Columns.Count; j++)
+                for (var j = 0; j < table.Columns.Count; j++)
                 {
                     var column = table.Columns[j];
 
@@ -119,29 +119,29 @@ namespace DbOrmModel
                         }
                     }
 
-                    var constName = "DB." + tableName + "." + fieldName;
+                    var constName = $"DB.{tableName}.{fieldName}";
 
-                    str.Line(2, "#region " + fieldName);
+                    str.Line(2, $"#region {fieldName}");
                     str.AppendLine();
 
                     InsertComment(meta, str, 2, column, false);
-                    string typeName = GetTypeName(column);
+                    var typeName = GetTypeName(column);
 
-                    string attrAllowDbNull = string.Empty;
+                    var attrAllowDbNull = string.Empty;
                     #region
                     if (column.NotNull)
                     {
                         attrAllowDbNull = ", NotNull: true";
                     }
                     #endregion
-                    string attrIsPrimaryKey = string.Empty;
+                    var attrIsPrimaryKey = string.Empty;
                     #region
                     if (column.IsPrimary)
                     {
                         attrIsPrimaryKey = ", PrimaryKey: true";
                     }
                     #endregion
-                    string attrForeignKey = string.Empty;
+                    var attrForeignKey = string.Empty;
                     #region
                     if (meta.ContainsForeignKey(table.Name + "." + column.Name))
                     {
@@ -157,21 +157,21 @@ namespace DbOrmModel
                             split[0] = meta.GetUserName(split[0]);
                         }
 
-                        attrForeignKey = ", ForeignKey: DB." + split[0] + "." + split[1];
+                        attrForeignKey = $", ForeignKey: DB.{split[0]}.{split[1]}";
                     }
                     #endregion
 
-                    str.Line(2, "[DBOrmColumn(" + constName + attrAllowDbNull + attrIsPrimaryKey + attrForeignKey + ")]");
+                    str.Line(2, $"[DBOrmColumn({constName}{attrAllowDbNull}{attrIsPrimaryKey}{attrForeignKey})]");
 
-                    string propertyText = "public " + typeName + " " + fieldName;
-                    string getText = "Row.Get<" + typeName + ">(" + constName + ");";
-                    string setText = "Row[" + constName + "] = value;";
+                    var propertyText = $"public {typeName} {fieldName}";
+                    var getText = $"Row.Get<{typeName}>({constName});";
+                    var setText = $"Row[{constName}] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
                     InsertComment(meta, str, 2, column, false);
-                    propertyText = "public object _" + fieldName;
-                    getText = "Row[" + constName + "];";
-                    setText = "Row[" + constName + "] = value;";
+                    propertyText = $"public object _{fieldName}";
+                    getText = $"Row[{constName}];";
+                    setText = $"Row[{constName}] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
                     str.AppendLine();
@@ -180,14 +180,14 @@ namespace DbOrmModel
 
                 str.AppendLine();
 
-                str.Line(2, "public " + tableName + "(DBRow row) : base(row) { }");
+                str.Line(2, $"public {tableName}(DBRow row) : base(row) {{ }}");
 
-                if (meta.ContainsDebugInfo(table.Name))
+                if (meta.ContainsToString(table.Name))
                 {
                     str.AppendLine();
                     str.Line(2, "public override string ToString()");
                     str.Line(2, "{");
-                    str.Line(3, "return " + meta.GetDebugInfo(table.Name) + "" + ";");
+                    str.Line(3, $"return {meta.GetToString(table.Name)};");
                     str.Line(2, "}");
                 }
 
@@ -203,23 +203,23 @@ namespace DbOrmModel
 
         private void InsertComment(MetaManager meta, StringBuilder str, int level, DBColumn column, bool insertTypeName)
         {
-            if (!meta.UseComments)
-                return;
+            if (meta.UseComments)
+            {
+                var columnName = column.Table.Name + "." + column.Name;
 
-            var columnName = column.Table.Name + "." + column.Name;
-
-            string comment = string.Empty;
-            if (meta.ContainsComment(columnName))
-            {
-                comment += meta.GetComment(columnName);
-            }
-            if (insertTypeName)
-            {
-                comment += " [" + GetCommentObjectType(column) + "]";
-            }
-            if (comment.Length > 0)
-            {
-                str.LineComment(level, comment);
+                var comment = string.Empty;
+                if (meta.ContainsComment(columnName))
+                {
+                    comment += meta.GetComment(columnName);
+                }
+                if (insertTypeName)
+                {
+                    comment += $" [{GetCommentObjectType(column)}]";
+                }
+                if (comment.Length > 0)
+                {
+                    str.LineComment(level, comment);
+                }
             }
         }
         private string GetCommentObjectType(DBColumn column)
@@ -227,14 +227,7 @@ namespace DbOrmModel
             string objectType;
             if (column.Description != null)
             {
-                if (column.Description == "BOOLEAN")
-                {
-                    objectType = typeof(bool).Name;
-                }
-                else
-                {
-                    objectType = column.Description;
-                }
+                objectType = column.Description == "BOOLEAN" ? typeof(bool).Name : column.Description;
             }
             else
             {
@@ -272,34 +265,73 @@ namespace DbOrmModel
             var type = column.DataType;
 
             string typeName;
+
             if (column.Description != null)
             {
-                if (column.Description == "BOOLEAN")
-                {
-                    typeName = typeof(bool).Name;
-                }
-                else
-                {
-                    typeName = column.Description;
-                }
+                typeName = column.Description == "BOOLEAN" ? typeof(bool).Name : column.Description;
             }
             else
             {
-                if (type == typeof(bool)) typeName = "bool";
-                else if (type == typeof(byte)) typeName = "byte";
-                else if (type == typeof(char)) typeName = "char";
-                else if (type == typeof(decimal)) typeName = "decimal";
-                else if (type == typeof(double)) typeName = "double";
-                else if (type == typeof(float)) typeName = "float";
-                else if (type == typeof(int)) typeName = "int";
-                else if (type == typeof(long)) typeName = "long";
-                else if (type == typeof(sbyte)) typeName = "sbyte";
-                else if (type == typeof(short)) typeName = "short";
-                else if (type == typeof(string)) typeName = "string";
-                else if (type == typeof(uint)) typeName = "uint";
-                else if (type == typeof(ulong)) typeName = "ulong";
-                else if (type == typeof(ushort)) typeName = "ushort";
-                else typeName = type.Name;
+                if (type == typeof(bool))
+                {
+                    typeName = "bool";
+                }
+                else if (type == typeof(byte))
+                {
+                    typeName = "byte";
+                }
+                else if (type == typeof(char))
+                {
+                    typeName = "char";
+                }
+                else if (type == typeof(decimal))
+                {
+                    typeName = "decimal";
+                }
+                else if (type == typeof(double))
+                {
+                    typeName = "double";
+                }
+                else if (type == typeof(float))
+                {
+                    typeName = "float";
+                }
+                else if (type == typeof(int))
+                {
+                    typeName = "int";
+                }
+                else if (type == typeof(long))
+                {
+                    typeName = "long";
+                }
+                else if (type == typeof(sbyte))
+                {
+                    typeName = "sbyte";
+                }
+                else if (type == typeof(short))
+                {
+                    typeName = "short";
+                }
+                else if (type == typeof(string))
+                {
+                    typeName = "string";
+                }
+                else if (type == typeof(uint))
+                {
+                    typeName = "uint";
+                }
+                else if (type == typeof(ulong))
+                {
+                    typeName = "ulong";
+                }
+                else if (type == typeof(ushort))
+                {
+                    typeName = "ushort";
+                }
+                else
+                {
+                    typeName = type.Name;
+                }
             }
 
             if (!column.NotNull && !column.DataType.IsClass)

@@ -4,11 +4,11 @@ using System.Text;
 
 namespace DbOrmModel
 {
-    class MetaManager
+    internal class MetaManager
     {
         public bool UseUserNames { get; set; }
         public bool UseComments { get; set; }
-        public bool UseDebugInfo { get; set; }
+        public bool UseToString { get; set; }
 
         public void Clear()
         {
@@ -18,11 +18,10 @@ namespace DbOrmModel
         {
             var content = new List<string>();
 
-            MetaItem item;
             foreach (var table in model.Tables)
             {
                 var key = table.Name;
-                if (!_dict.TryGetValue(key, out item))
+                if (!_dict.TryGetValue(key, out var item))
                 {
                     item = new MetaItem();
                 }
@@ -60,25 +59,40 @@ namespace DbOrmModel
                 foreach (var line in content)
                 {
                     if (line.Length == 0 || line.StartsWith("#"))
+                    {
                         continue;
+                    }
 
                     var split = line.Split('\t');
-                    string key = split[0];
+                    var key = split[0];
                     if (_dict.ContainsKey(key))
                     {
                         var item = _dict[key];
 
                         if (split.Length > 1)
+                        {
                             item.UserName = split[1];
+                        }
 
                         if (split.Length > 2)
+                        {
                             item.Comment = split[2];
+                        }
 
                         if (split.Length > 3)
-                            item.ForeignKey = split[3];
+                        {
+                            item.DataType = split[3];
+                        }
 
                         if (split.Length > 4)
-                            item.DebugInfo = split[4];
+                        {
+                            item.ForeignKey = split[4];
+                        }
+
+                        if (split.Length > 5)
+                        {
+                            item.DebugInfo = split[5];
+                        }
                     }
                 }
             }
@@ -88,7 +102,7 @@ namespace DbOrmModel
         {
             if (UseUserNames && _dict.ContainsKey(tableName))
             {
-                return (_dict[tableName].UserName != string.Empty);
+                return _dict[tableName].UserName != string.Empty;
             }
             return false;
         }
@@ -96,7 +110,15 @@ namespace DbOrmModel
         {
             if (UseComments && _dict.ContainsKey(tableName))
             {
-                return (_dict[tableName].Comment != string.Empty);
+                return _dict[tableName].Comment != string.Empty;
+            }
+            return false;
+        }
+        public bool ContainsDataType(string tableName)
+        {
+            if (_dict.ContainsKey(tableName))
+            {
+                return _dict[tableName].DataType != string.Empty;
             }
             return false;
         }
@@ -104,15 +126,15 @@ namespace DbOrmModel
         {
             if (_dict.ContainsKey(tableName))
             {
-                return (_dict[tableName].ForeignKey != string.Empty);
+                return _dict[tableName].ForeignKey != string.Empty;
             }
             return false;
         }
-        public bool ContainsDebugInfo(string tableName)
+        public bool ContainsToString(string tableName)
         {
-            if (UseDebugInfo && _dict.ContainsKey(tableName))
+            if (UseToString && _dict.ContainsKey(tableName))
             {
-                return (_dict[tableName].DebugInfo != string.Empty);
+                return _dict[tableName].DebugInfo != string.Empty;
             }
             return false;
         }
@@ -125,19 +147,22 @@ namespace DbOrmModel
         {
             return _dict[tableName].Comment;
         }
+        public string GetDataType(string tableName)
+        {
+            return _dict[tableName].DataType;
+        }
         public string GetForeignKeyInfo(string tableName)
         {
             return _dict[tableName].ForeignKey;
         }
-        public string GetDebugInfo(string tableName)
+        public string GetToString(string tableName)
         {
             return _dict[tableName].DebugInfo;
         }
 
-
         private string CreateHeaderLine()
         {
-            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Внешний ключ" + "\t" + "#Отладочная информация";
+            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "Тип данных" + "\t" + "#Внешний ключ" + "\t" + "#Конструкция .ToString()";
         }
         private string CreateContentLine(string key, MetaItem item)
         {
@@ -147,7 +172,7 @@ namespace DbOrmModel
                 if (!key.Contains("."))
                 {
                     // Таблица
-                    userName = PrepareFieldName(key);
+                    userName = PrepareUserName(key);
                 }
                 else
                 {
@@ -159,36 +184,30 @@ namespace DbOrmModel
                     {
                         userName = userName.Remove(0, tableName.Length + 1);
                     }
-                    userName = PrepareFieldName(userName);
+                    userName = PrepareUserName(userName);
                 }
             }
 
-            return key + "\t" + userName + "\t" + item.Comment + "\t" + item.ForeignKey + "\t" + item.DebugInfo;
+            return $"{key}\t{userName}\t{item.Comment}\t{item.DataType}\t{item.ForeignKey}\t{item.DebugInfo}";
         }
-        private string PrepareFieldName(string value)
+        private string PrepareUserName(string value)
         {
             var str = new StringBuilder(value.Length);
-            for (int i = 0; i < value.Length; i++)
+            for (var i = 0; i < value.Length; i++)
             {
                 var c = value[i];
-                if (i == 0)
-                {
-                    c = char.ToUpper(c);
-                }
-                else
-                {
-                    c = char.ToLower(c);
-                }
+                c = i == 0 ? char.ToUpper(c) : char.ToLower(c);
                 str.Append(c);
             }
             return str.ToString();
         }
 
-        private Dictionary<string, MetaItem> _dict = new Dictionary<string, MetaItem>();
+        private readonly Dictionary<string, MetaItem> _dict = new Dictionary<string, MetaItem>();
         private class MetaItem
         {
             public string UserName = string.Empty;
             public string Comment = string.Empty;
+            public string DataType = string.Empty;
             public string ForeignKey = string.Empty;
             public string DebugInfo = string.Empty;
         }

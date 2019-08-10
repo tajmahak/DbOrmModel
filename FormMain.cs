@@ -18,16 +18,19 @@ namespace DbOrmModel
             get
             {
                 if (_dbFilePath == null)
+                {
                     return null;
+                }
+
                 return _dbFilePath + ".meta.txt";
             }
         }
 
         private string _dbFilePath;
-        private string[] _args;
+        private readonly string[] _args;
         private OrmModelTextBuilder _builder;
-        private MetaManager _metaManager = new MetaManager();
-        private List<string> _recentList;
+        private readonly MetaManager _metaManager = new MetaManager();
+        private readonly List<string> _recentList;
         private const string _recentFilePath = "recent.txt";
         private const int _recentFileCount = 10;
 
@@ -40,6 +43,27 @@ namespace DbOrmModel
             UpdateRecentList();
             WriteStatus(string.Empty, false);
         }
+        private void Form_Shown(object sender, EventArgs e)
+        {
+            if (_args.Length > 0 && File.Exists(_args[0]))
+            {
+                Open(_args[0]);
+            }
+        }
+        private void Form_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.All;
+        }
+        private void Form_DragDrop(object sender, DragEventArgs e)
+        {
+            var path = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (path.Length == 0)
+            {
+                return;
+            }
+
+            Open(path[0]);
+        }
 
         private void UpdateInfo()
         {
@@ -51,30 +75,12 @@ namespace DbOrmModel
             Open(_dbFilePath);
         }
 
-        private void Form1_Shown(object sender, EventArgs e)
-        {
-            if (_args.Length > 0 && File.Exists(_args[0]))
-            {
-                Open(_args[0]);
-            }
-        }
-        private void Form1_DragEnter(object sender, DragEventArgs e)
-        {
-            e.Effect = DragDropEffects.All;
-        }
-        private void Form1_DragDrop(object sender, DragEventArgs e)
-        {
-            var path = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (path.Length == 0)
-                return;
-
-            Open(path[0]);
-        }
-
         private void открытьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Filter = "Файлы базы данных (*.FDB)|*.FDB";
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Файлы базы данных (*.FDB)|*.FDB"
+            };
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
@@ -87,7 +93,7 @@ namespace DbOrmModel
         }
         private void recentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ToolStripMenuItem recentItem = (ToolStripMenuItem)sender;
+            var recentItem = (ToolStripMenuItem)sender;
             var filePath = recentItem.Text;
 
             Open(filePath);
@@ -156,11 +162,13 @@ namespace DbOrmModel
         private void Open(string databasePath)
         {
             if (!File.Exists(databasePath))
+            {
                 return;
+            }
 
             WriteStatus("Загрузка базы данных...", false);
 
-            try
+            //!!!try
             {
                 databasePath = Path.GetFullPath(databasePath);
                 if (databasePath != _dbFilePath)
@@ -173,7 +181,7 @@ namespace DbOrmModel
                 _metaManager.Clear();
                 _metaManager.UseComments = использоватьКомментарииToolStripMenuItem.Checked;
                 _metaManager.UseUserNames = использоватьПользовательскиеИменаToolStripMenuItem.Checked;
-                _metaManager.UseDebugInfo = использоватьОтладочнуюИнформациюToolStripMenuItem.Checked;
+                _metaManager.UseToString = использоватьОтладочнуюИнформациюToolStripMenuItem.Checked;
 
                 if (File.Exists(MetaFilePath))
                 {
@@ -194,17 +202,17 @@ namespace DbOrmModel
 
                 WriteStatus(_dbFilePath, false);
             }
-            catch (Exception ex)
-            {
-                WriteStatus(ex.Message, true);
-            }
+            //!!!catch (Exception ex)
+            //{
+            //    WriteStatus(ex.Message, true);
+            //}
         }
         private void UpdateRecentList()
         {
             _recentList.Clear();
 
             var dropDownItems = недавниеФайлыToolStripMenuItem.DropDownItems;
-            for (int i = 2; i < dropDownItems.Count; i++)
+            for (var i = 2; i < dropDownItems.Count; i++)
             {
                 dropDownItems.RemoveAt(i);
                 i--;
@@ -215,12 +223,16 @@ namespace DbOrmModel
                 foreach (var item in File.ReadAllLines(_recentFilePath, Encoding.UTF8))
                 {
                     if (!File.Exists(item))
+                    {
                         continue;
+                    }
 
                     _recentList.Add(item);
 
-                    var recentItem = new ToolStripMenuItem();
-                    recentItem.Text = item;
+                    var recentItem = new ToolStripMenuItem
+                    {
+                        Text = item
+                    };
                     recentItem.Click += new EventHandler(recentToolStripMenuItem_Click);
                     dropDownItems.Add(recentItem);
                 }
@@ -261,17 +273,21 @@ namespace DbOrmModel
             finally
             {
                 if (connection != null)
+                {
                     connection.Dispose();
+                }
             }
         }
         private DbConnection CreateDataBaseConnection(string path)
         {
-            var conBuilder = new FbConnectionStringBuilder();
-            conBuilder.Dialect = 3;
-            conBuilder.UserID = "SYSDBA";
-            conBuilder.Password = "masterkey";
-            conBuilder.Charset = "WIN1251";
-            conBuilder.Database = path;
+            var conBuilder = new FbConnectionStringBuilder
+            {
+                Dialect = 3,
+                UserID = "SYSDBA",
+                Password = "masterkey",
+                Charset = "WIN1251",
+                Database = path
+            };
 
             if (Settings.Default.UseEmbeddedServer == 0)
             {
@@ -298,7 +314,10 @@ namespace DbOrmModel
         private void CopyToClipboard(string text)
         {
             if (text.Length == 0)
+            {
                 return;
+            }
+
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
         private void WriteStatus(string text, bool error)

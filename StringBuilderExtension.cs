@@ -4,14 +4,14 @@ namespace DbOrmModel
 {
     public static class StringBuilderExtension
     {
-        public static void Line(this StringBuilder str, int level, string text, params object[] values)
+        public static void Line(this StringBuilder str, int level, string text)
         {
-            string padding = string.Empty;
+            var padding = string.Empty;
             if (level > 0)
+            {
                 padding = new string(' ', level * 4);
-            if (values.Length == 0)
-                str.AppendLine(padding + text);
-            else str.AppendLine(padding + string.Format(text, values));
+            }
+            str.AppendLine(padding + text);
         }
         public static void LineProperty(this StringBuilder str, int level, string text, string getText, string setText)
         {
