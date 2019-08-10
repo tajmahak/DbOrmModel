@@ -162,7 +162,7 @@ namespace DbOrmModel
 
         private string CreateHeaderLine()
         {
-            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "Тип данных" + "\t" + "#Внешний ключ" + "\t" + "#Конструкция .ToString()";
+            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Тип данных" + "\t" + "#Внешний ключ" + "\t" + "#Конструкция .ToString()";
         }
         private string CreateContentLine(string key, MetaItem item)
         {

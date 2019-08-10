@@ -124,8 +124,8 @@ namespace DbOrmModel
                     str.Line(2, $"#region {fieldName}");
                     str.AppendLine();
 
-                    InsertComment(meta, str, 2, column, false);
-                    var typeName = GetTypeName(column);
+                    InsertComment(meta, str, 2, column, true);
+                    var typeName = GetTypeName(column, meta);
 
                     var attrAllowDbNull = string.Empty;
                     #region
@@ -168,7 +168,7 @@ namespace DbOrmModel
                     var setText = $"Row[{constName}] = value;";
                     str.LineProperty(2, propertyText, getText, setText);
 
-                    InsertComment(meta, str, 2, column, false);
+                    InsertComment(meta, str, 2, column, true);
                     propertyText = $"public object _{fieldName}";
                     getText = $"Row[{constName}];";
                     setText = $"Row[{constName}] = value;";
@@ -214,7 +214,7 @@ namespace DbOrmModel
                 }
                 if (insertTypeName)
                 {
-                    comment += $" [{GetCommentObjectType(column)}]";
+                    comment += $" [{GetCommentObjectType(column, meta)}]";
                 }
                 if (comment.Length > 0)
                 {
@@ -222,116 +222,84 @@ namespace DbOrmModel
                 }
             }
         }
-        private string GetCommentObjectType(DBColumn column)
+        private string GetCommentObjectType(DBColumn column, MetaManager meta)
         {
-            string objectType;
-            if (column.Description != null)
+            var typeName = GetTypeName(column, meta);
+            if (!column.NotNull && column.DataType.IsClass)
             {
-                objectType = column.Description == "BOOLEAN" ? typeof(bool).Name : column.Description;
+                typeName += "?";
             }
-            else
-            {
-                objectType = column.DataType.Name;
-            }
-
-            switch (objectType)
-            {
-                case "Boolean": objectType = "bool"; break;
-                case "Char": objectType = "char"; break;
-                case "String": objectType = "string"; break;
-
-                case "Byte": objectType = "byte"; break;
-                case "SByte": objectType = "sbyte"; break;
-                case "Int16": objectType = "short"; break;
-                case "UInt16": objectType = "ushort"; break;
-                case "Int32": objectType = "int"; break;
-                case "UInt32": objectType = "uint"; break;
-                case "Int64": objectType = "long"; break;
-                case "UInt64": objectType = "ulong"; break;
-
-                case "Single": objectType = "float"; break;
-                case "Double": objectType = "double"; break;
-                case "Decimal": objectType = "decimal"; break;
-            }
-
-            if (!column.NotNull)
-            {
-                objectType += "?";
-            }
-            return objectType;
+            return typeName;
         }
-        private string GetTypeName(DBColumn column)
+        private string GetTypeName(DBColumn column, MetaManager meta)
         {
             var type = column.DataType;
 
             string typeName;
-
-            if (column.Description != null)
+            if (meta.ContainsDataType(column.Table.Name + "." + column.Name))
             {
-                typeName = column.Description == "BOOLEAN" ? typeof(bool).Name : column.Description;
+                typeName = meta.GetDataType(column.Table.Name + "." + column.Name);
+            }
+
+            else if (type == typeof(bool))
+            {
+                typeName = "bool";
+            }
+            else if (type == typeof(byte))
+            {
+                typeName = "byte";
+            }
+            else if (type == typeof(char))
+            {
+                typeName = "char";
+            }
+            else if (type == typeof(decimal))
+            {
+                typeName = "decimal";
+            }
+            else if (type == typeof(double))
+            {
+                typeName = "double";
+            }
+            else if (type == typeof(float))
+            {
+                typeName = "float";
+            }
+            else if (type == typeof(int))
+            {
+                typeName = "int";
+            }
+            else if (type == typeof(long))
+            {
+                typeName = "long";
+            }
+            else if (type == typeof(sbyte))
+            {
+                typeName = "sbyte";
+            }
+            else if (type == typeof(short))
+            {
+                typeName = "short";
+            }
+            else if (type == typeof(string))
+            {
+                typeName = "string";
+            }
+            else if (type == typeof(uint))
+            {
+                typeName = "uint";
+            }
+            else if (type == typeof(ulong))
+            {
+                typeName = "ulong";
+            }
+            else if (type == typeof(ushort))
+            {
+                typeName = "ushort";
             }
             else
             {
-                if (type == typeof(bool))
-                {
-                    typeName = "bool";
-                }
-                else if (type == typeof(byte))
-                {
-                    typeName = "byte";
-                }
-                else if (type == typeof(char))
-                {
-                    typeName = "char";
-                }
-                else if (type == typeof(decimal))
-                {
-                    typeName = "decimal";
-                }
-                else if (type == typeof(double))
-                {
-                    typeName = "double";
-                }
-                else if (type == typeof(float))
-                {
-                    typeName = "float";
-                }
-                else if (type == typeof(int))
-                {
-                    typeName = "int";
-                }
-                else if (type == typeof(long))
-                {
-                    typeName = "long";
-                }
-                else if (type == typeof(sbyte))
-                {
-                    typeName = "sbyte";
-                }
-                else if (type == typeof(short))
-                {
-                    typeName = "short";
-                }
-                else if (type == typeof(string))
-                {
-                    typeName = "string";
-                }
-                else if (type == typeof(uint))
-                {
-                    typeName = "uint";
-                }
-                else if (type == typeof(ulong))
-                {
-                    typeName = "ulong";
-                }
-                else if (type == typeof(ushort))
-                {
-                    typeName = "ushort";
-                }
-                else
-                {
-                    typeName = type.Name;
-                }
+                typeName = type.Name;
             }
 
             if (!column.NotNull && !column.DataType.IsClass)

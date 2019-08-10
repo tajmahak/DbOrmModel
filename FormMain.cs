@@ -168,7 +168,7 @@ namespace DbOrmModel
 
             WriteStatus("Загрузка базы данных...", false);
 
-            //!!!try
+            try
             {
                 databasePath = Path.GetFullPath(databasePath);
                 if (databasePath != _dbFilePath)
@@ -202,10 +202,10 @@ namespace DbOrmModel
 
                 WriteStatus(_dbFilePath, false);
             }
-            //!!!catch (Exception ex)
-            //{
-            //    WriteStatus(ex.Message, true);
-            //}
+            catch (Exception ex)
+            {
+                WriteStatus(ex.Message, true);
+            }
         }
         private void UpdateRecentList()
         {
