@@ -49,13 +49,6 @@ namespace DbOrmModel
                     {
                         fieldName = meta.GetUserName(table.Name + "." + column.Name);
                     }
-                    else
-                    {
-                        if (fieldName.StartsWith(table.Name))
-                        {
-                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
-                        }
-                    }
 
                     InsertComment(meta, str, 2, column, true);
                     str.Line(2, $"public const string {fieldName} = \"{table.Name}.{column.Name}\";");
@@ -110,13 +103,6 @@ namespace DbOrmModel
                     if (meta.ContainsUserName(table.Name + "." + column.Name))
                     {
                         fieldName = meta.GetUserName(table.Name + "." + column.Name);
-                    }
-                    else
-                    {
-                        if (fieldName.StartsWith(table.Name))
-                        {
-                            fieldName = fieldName.Remove(0, table.Name.Length + 1);
-                        }
                     }
 
                     var constName = $"DB.{tableName}.{fieldName}";
