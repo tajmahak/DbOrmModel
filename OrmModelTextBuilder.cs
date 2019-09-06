@@ -36,7 +36,7 @@ namespace DbOrmModel
                     str.LineComment(1, meta.GetComment(table.Name));
                 }
 
-                str.Line(1, $"public static class {tableName}");
+                str.Line(1, $"internal static class {tableName}");
                 str.Line(1, "{");
 
                 str.Line(2, $"public const string _ = \"{table.Name}\";");
@@ -90,10 +90,10 @@ namespace DbOrmModel
                 }
 
                 str.Line(1, $"[DBOrmTable(DB.{tableName}._)]");
-                str.Line(1, $"public class {tableName}: DBOrmTableBase");
+                str.Line(1, $"internal class {tableName}: DBOrmRowBase<{tableName}>");
                 str.Line(1, "{");
 
-                str.LineProperty(2, "public string _", "Row.Table.Name;", null);
+                //str.LineProperty(2, "public string _", "Row.Table.Name;", null);
 
                 for (var j = 0; j < table.Columns.Count; j++)
                 {
@@ -166,7 +166,7 @@ namespace DbOrmModel
 
                 str.AppendLine();
 
-                str.Line(2, $"public {tableName}(DBRow row) : base(row) {{ }}");
+                str.Line(2, $"public {tableName}({nameof(DBRow)} row) : base(row) {{ }}");
 
                 if (meta.ContainsToString(table.Name))
                 {
