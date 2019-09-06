@@ -8,7 +8,6 @@ namespace DbOrmModel
     {
         public bool UseUserNames { get; set; }
         public bool UseComments { get; set; }
-        public bool UseToString { get; set; }
 
         public void Clear()
         {
@@ -88,11 +87,6 @@ namespace DbOrmModel
                         {
                             item.ForeignKey = split[4];
                         }
-
-                        if (split.Length > 5)
-                        {
-                            item.DebugInfo = split[5];
-                        }
                     }
                 }
             }
@@ -130,14 +124,6 @@ namespace DbOrmModel
             }
             return false;
         }
-        public bool ContainsToString(string tableName)
-        {
-            if (UseToString && _dict.ContainsKey(tableName))
-            {
-                return _dict[tableName].DebugInfo != string.Empty;
-            }
-            return false;
-        }
 
         public string GetUserName(string tableName)
         {
@@ -155,14 +141,10 @@ namespace DbOrmModel
         {
             return _dict[tableName].ForeignKey;
         }
-        public string GetToString(string tableName)
-        {
-            return _dict[tableName].DebugInfo;
-        }
 
         private string CreateHeaderLine()
         {
-            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Тип данных" + "\t" + "#Внешний ключ" + "\t" + "#Конструкция .ToString()";
+            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Тип данных" + "\t" + "#Внешний ключ";
         }
         private string CreateContentLine(string key, MetaItem item)
         {
@@ -188,7 +170,7 @@ namespace DbOrmModel
                 }
             }
 
-            return $"{key}\t{userName}\t{item.Comment}\t{item.DataType}\t{item.ForeignKey}\t{item.DebugInfo}";
+            return $"{key}\t{userName}\t{item.Comment}\t{item.DataType}\t{item.ForeignKey}";
         }
         private string PrepareUserName(string value)
         {
@@ -209,7 +191,6 @@ namespace DbOrmModel
             public string Comment = string.Empty;
             public string DataType = string.Empty;
             public string ForeignKey = string.Empty;
-            public string DebugInfo = string.Empty;
         }
     }
 }

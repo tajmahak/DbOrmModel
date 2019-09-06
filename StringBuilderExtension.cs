@@ -4,6 +4,10 @@ namespace DbOrmModel
 {
     public static class StringBuilderExtension
     {
+        public static void Line(this StringBuilder str)
+        {
+            str.AppendLine();
+        }
         public static void Line(this StringBuilder str, int level, string text)
         {
             var padding = string.Empty;
