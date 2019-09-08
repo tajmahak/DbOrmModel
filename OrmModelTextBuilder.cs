@@ -17,7 +17,7 @@ namespace DbOrmModel
             str.Line(0, "using MyLibrary.DataBase;");
             str.Line(0, "using System;");
             str.Line();
-            str.Line(0, $"namespace DB");
+            str.Line(0, $"internal static class DB");
             str.Line(0, "{");
             #region
             foreach (var table in Model.Tables)
@@ -34,20 +34,25 @@ namespace DbOrmModel
                 {
                     str.LineComment(1, tableComment);
                 }
-                str.Line(1, $"internal static class {customTableName}Table");
+                str.Line(1, $"public const string {customTableName}TableName = \"{originalTableName}\";");
+                str.Line();
+
+                if (meta.UseComments)
+                {
+                    str.LineComment(1, tableComment);
+                }
+                str.Line(1, $"internal static class {customTableName}");
                 str.Line(1, "{");
                 #region
-
-                str.Line(2, $"public const string _ = \"{originalTableName}\";");
 
                 foreach (var column in table.Columns)
                 {
                     var originalColumnName = column.Name;
                     var customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
 
-                    str.Line();
                     InsertComment(meta, str, 2, column, true);
                     str.Line(2, $"public const string {customColumnName} = \"{originalTableName}.{originalColumnName}\";");
+                    str.Line();
                 }
 
                 #endregion
@@ -58,7 +63,7 @@ namespace DbOrmModel
                 {
                     str.LineComment(1, tableComment);
                 }
-                str.Line(1, $"[DBOrmTable({customTableName}Table._)]");
+                str.Line(1, $"[DBOrmTable({customTableName}TableName)]");
                 str.Line(1, $"internal class {customTableName}Row : DBOrmRowBase<{customTableName}Row>");
                 str.Line(1, "{");
                 #region
@@ -98,7 +103,7 @@ namespace DbOrmModel
                             split[0] = meta.GetUserName(split[0]);
                         }
 
-                        foreignKeyAttribute = $", ForeignKey: {split[0]}Table.{split[1]}";
+                        foreignKeyAttribute = $", ForeignKey: {split[0]}.{split[1]}";
                     }
 
                     #endregion
@@ -107,16 +112,16 @@ namespace DbOrmModel
                     str.Line();
 
                     InsertComment(meta, str, 2, column, false);
-                    str.Line(2, $"[DBOrmColumn({customTableName}Table.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
+                    str.Line(2, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
                     str.LineProperty(2, $"public {columnTypeName} {customColumnName}",
-                        $"Row.Get<{columnTypeName}>({customTableName}Table.{customColumnName});",
-                        $"Row[{customTableName}Table.{customColumnName}] = value;");
+                        $"Row.Get<{columnTypeName}>({customTableName}.{customColumnName});",
+                        $"Row[{customTableName}.{customColumnName}] = value;");
 
                     str.Line();
                     InsertComment(meta, str, 2, column, true);
                     str.Line(2, $"public void Set{customColumnName}(object value)");
                     str.Line(2, "{");
-                    str.Line(3, $"Row[{customTableName}Table.{customColumnName}] = value;");
+                    str.Line(3, $"Row[{customTableName}.{customColumnName}] = value;");
                     str.Line(2, "}");
 
                     str.Line();
