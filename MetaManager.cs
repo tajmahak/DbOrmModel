@@ -1,4 +1,5 @@
-﻿using MyLibrary.DataBase;
+﻿using MyLibrary.Data;
+using MyLibrary.DataBase;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,18 +14,18 @@ namespace DbOrmModel
         {
             _dict.Clear();
         }
-        public string[] UploadInfo(DBModelBase model)
+        public string[] UploadInfo(DBProvider provider)
         {
             var content = new List<string>();
 
-            foreach (var table in model.Tables)
+            foreach (var table in provider.Tables)
             {
                 var key = table.Name;
                 if (!_dict.TryGetValue(key, out var item))
                 {
                     item = new MetaItem();
                 }
-                content.Add(string.Empty);
+                content.Add(new string('\t', _headersCount - 1));
                 content.Add(CreateContentLine(key, item));
 
                 foreach (var column in table.Columns)
@@ -37,14 +38,14 @@ namespace DbOrmModel
                     content.Add(CreateContentLine(key, item));
                 }
             }
-            content[0] = CreateHeaderLine();
+            content[0] = _headers;
 
             return content.ToArray();
         }
-        public void LoadInfo(DBModelBase model, string[] content)
+        public void LoadInfo(DBProvider provider, string[] content)
         {
             Clear();
-            foreach (var table in model.Tables)
+            foreach (var table in provider.Tables)
             {
                 _dict.Add(table.Name, new MetaItem());
                 foreach (var column in table.Columns)
@@ -71,6 +72,12 @@ namespace DbOrmModel
                         if (split.Length > 1)
                         {
                             item.UserName = split[1];
+                            var splitUserName = Format.Split(item.UserName, "/");
+                            if (splitUserName.Length > 1)
+                            {
+                                item.UserName = splitUserName[0].Trim();
+                                item.UserName_TableList = splitUserName[1].Trim();
+                            }
                         }
 
                         if (split.Length > 2)
@@ -97,6 +104,14 @@ namespace DbOrmModel
             if (UseUserNames && _dict.ContainsKey(tableName))
             {
                 return _dict[tableName].UserName != string.Empty;
+            }
+            return false;
+        }
+        public bool ContainsUserName_TableList(string tableName)
+        {
+            if (UseUserNames && _dict.ContainsKey(tableName))
+            {
+                return _dict[tableName].UserName_TableList != string.Empty;
             }
             return false;
         }
@@ -129,6 +144,10 @@ namespace DbOrmModel
         {
             return _dict[tableName].UserName;
         }
+        public string GetUserName_TableList(string tableName)
+        {
+            return _dict[tableName].UserName_TableList;
+        }
         public string GetComment(string tableName)
         {
             return _dict[tableName].Comment;
@@ -142,13 +161,14 @@ namespace DbOrmModel
             return _dict[tableName].ForeignKey;
         }
 
-        private string CreateHeaderLine()
-        {
-            return "#Название" + "\t" + "#Пользовательское имя" + "\t" + "#Комментарий" + "\t" + "#Тип данных" + "\t" + "#Внешний ключ";
-        }
         private string CreateContentLine(string key, MetaItem item)
         {
             var userName = item.UserName;
+            if (item.UserName_TableList.Length > 0)
+            {
+                userName += " / " + item.UserName_TableList;
+            }
+
             if (userName.Length == 0)
             {
                 if (!key.Contains("."))
@@ -184,10 +204,14 @@ namespace DbOrmModel
             return str.ToString();
         }
 
+        private const string _headers = "#Название" + "\t" + "#Пользовательское имя [/ Имя таблицы во множественном числе]" + "\t" + "#Комментарий" + "\t" + "#Тип данных" + "\t" + "#Внешний ключ";
+        private const int _headersCount = 5;
+
         private readonly Dictionary<string, MetaItem> _dict = new Dictionary<string, MetaItem>();
         private class MetaItem
         {
             public string UserName = string.Empty;
+            public string UserName_TableList = string.Empty;
             public string Comment = string.Empty;
             public string DataType = string.Empty;
             public string ForeignKey = string.Empty;

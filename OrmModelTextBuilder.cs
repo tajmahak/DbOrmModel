@@ -5,26 +5,28 @@ namespace DbOrmModel
 {
     internal class OrmModelTextBuilder
     {
-        public DBModelBase Model { get; private set; }
+        public DBProvider Provider { get; private set; }
 
-        public OrmModelTextBuilder(DBModelBase model)
+        public OrmModelTextBuilder(DBProvider provider)
         {
-            Model = model;
+            Provider = provider;
         }
         public string CreateText(MetaManager meta)
         {
             var str = new StringBuilder();
             str.Line(0, "using MyLibrary.DataBase;");
             str.Line(0, "using System;");
+            str.Line(0, "using System.Data.Common;");
             str.Line();
-            str.Line(0, $"internal static class DB");
+            str.Line(0, $"internal class DB : DBContext");
             str.Line(0, "{");
             #region
-            foreach (var table in Model.Tables)
+            foreach (var table in Provider.Tables)
             {
                 var originalTableName = table.Name;
                 var customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
                 var tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
+                var customTableListName = meta.ContainsUserName_TableList(originalTableName) ? meta.GetUserName_TableList(originalTableName) : customTableName + "s";
 
                 str.Line(1, $"#region {customTableName}");
                 #region
@@ -35,6 +37,14 @@ namespace DbOrmModel
                     str.LineComment(1, tableComment);
                 }
                 str.Line(1, $"public const string {customTableName}TableName = \"{originalTableName}\";");
+                str.Line();
+
+
+                if (meta.UseComments)
+                {
+                    str.LineComment(1, tableComment);
+                }
+                str.Line(1, $"public DBQuery<{customTableName}Row> {customTableListName} => Select<{customTableName}Row>();");
                 str.Line();
 
                 if (meta.UseComments)
@@ -64,7 +74,7 @@ namespace DbOrmModel
                     str.LineComment(1, tableComment);
                 }
                 str.Line(1, $"[DBOrmTable({customTableName}TableName)]");
-                str.Line(1, $"internal class {customTableName}Row : DBOrmRowBase<{customTableName}Row>");
+                str.Line(1, $"internal class {customTableName}Row : DBOrmRow<{customTableName}Row>");
                 str.Line(1, "{");
                 #region
 
@@ -114,7 +124,7 @@ namespace DbOrmModel
                     InsertComment(meta, str, 2, column, false);
                     str.Line(2, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
                     str.LineProperty(2, $"public {columnTypeName} {customColumnName}",
-                        $"Row.Get<{columnTypeName}>({customTableName}.{customColumnName});",
+                        $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
                         $"Row[{customTableName}.{customColumnName}] = value;");
 
                     str.Line();
@@ -140,7 +150,11 @@ namespace DbOrmModel
                 str.Line();
             }
             #endregion
-            str.Remove(str.Length - 2, 2);
+
+            str.Line(1, "public DB(DBProvider provider, DbConnection connection) : base(provider, connection)");
+            str.Line(1, "{");
+            str.Line(1, "}");
+
             str.Line(0, "}");
 
             return str.ToString();
@@ -149,7 +163,7 @@ namespace DbOrmModel
         {
             var str = new StringBuilder();
 
-            foreach (var table in Model.Tables)
+            foreach (var table in Provider.Tables)
             {
                 var originalTableName = table.Name;
                 var customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;

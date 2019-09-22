@@ -97,11 +97,11 @@ namespace DbOrmModel
                     if (File.Exists(MetaFilePath))
                     {
                         var content = File.ReadAllLines(MetaFilePath);
-                        _metaManager.LoadInfo(_builder.Model, content);
+                        _metaManager.LoadInfo(_builder.Provider, content);
                     }
                     else
                     {
-                        _metaManager.LoadInfo(_builder.Model, null);
+                        _metaManager.LoadInfo(_builder.Provider, null);
                     }
 
                     if (_mode1.Checked)
@@ -174,9 +174,9 @@ namespace DbOrmModel
             try
             {
                 connection = CreateDataBaseConnection(databasePath);
-                var model = new FireBirdDBModel();
-                model.Initialize(connection);
-                return new OrmModelTextBuilder(model);
+                var provider = new FireBirdProvider();
+                provider.Initialize(connection);
+                return new OrmModelTextBuilder(provider);
             }
             catch
             {
@@ -296,7 +296,7 @@ namespace DbOrmModel
                 File.Delete(MetaFilePath);
             }
 
-            var content = _metaManager.UploadInfo(_builder.Model);
+            var content = _metaManager.UploadInfo(_builder.Provider);
             File.WriteAllLines(MetaFilePath, content, Encoding.UTF8);
 
             WriteStatus("Создание/обновление файлов метаданных выполнено", false);
