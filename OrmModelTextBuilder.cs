@@ -18,7 +18,7 @@ namespace DbOrmModel
             str.Line(0, "using System;");
             str.Line(0, "using System.Data.Common;");
             str.Line();
-            str.Line(0, $"internal class DB : DBContext");
+            str.Line(0, $"public class DB : DBContext");
             str.Line(0, "{");
             #region
             foreach (var table in Provider.Tables)
@@ -74,7 +74,7 @@ namespace DbOrmModel
                     str.LineComment(1, tableComment);
                 }
                 str.Line(1, $"[DBOrmTable({customTableName}TableName)]");
-                str.Line(1, $"internal class {customTableName}Row : DBOrmRow<{customTableName}Row>");
+                str.Line(1, $"public class {customTableName}Row : DBOrmRow<{customTableName}Row>");
                 str.Line(1, "{");
                 #region
 
@@ -177,7 +177,7 @@ namespace DbOrmModel
                 {
                     str.LineComment(0, tableComment);
                 }
-                str.Line(0, $"internal class {customTableName}Item");
+                str.Line(0, $"public class {customTableName}Item");
                 str.Line(0, "{");
                 #region
 
