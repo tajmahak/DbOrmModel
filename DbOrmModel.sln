@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbOrmModel", "DbOrmModel.csproj", "{9B5DB966-A2AB-46E8-B5C4-7856EA1CB285}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyLibrary", "..\MyLibrary\MyLibrary.csproj", "{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,16 +21,11 @@ Global
 		{9B5DB966-A2AB-46E8-B5C4-7856EA1CB285}.Release|Any CPU.Build.0 = Release|x86
 		{9B5DB966-A2AB-46E8-B5C4-7856EA1CB285}.Release|x86.ActiveCfg = Release|x86
 		{9B5DB966-A2AB-46E8-B5C4-7856EA1CB285}.Release|x86.Build.0 = Release|x86
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Debug|x86.Build.0 = Debug|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Release|x86.ActiveCfg = Release|Any CPU
-		{404E44A1-DC9F-4C3F-A1DB-4283D69343D5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {982738C2-2DDF-4463-A0C7-4C49F0D6DCB6}
 	EndGlobalSection
 EndGlobal
