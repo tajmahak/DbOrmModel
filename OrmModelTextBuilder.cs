@@ -13,80 +13,80 @@ namespace DbOrmModel
         }
         public string CreateText(MetaManager meta)
         {
-            var str = new StringBuilder();
-            str.Line(0, "using MyLibrary.DataBase;");
-            str.Line(0, "using System;");
-            str.Line(0, "using System.Data.Common;");
-            str.Line();
-            str.Line(0, $"public class DB : DBContext");
-            str.Line(0, "{");
+            StringBuilder str = new StringBuilder();
+            str.AddLine(0, "using MyLibrary.DataBase;");
+            str.AddLine(0, "using System;");
+            str.AddLine(0, "using System.Data.Common;");
+            str.AddLine();
+            str.AddLine(0, $"public class DB : DBContext");
+            str.AddLine(0, "{");
             #region
-            foreach (var table in Provider.Tables)
+            foreach (DBTable table in Provider.Tables)
             {
-                var originalTableName = table.Name;
-                var customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
-                var tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
-                var customTableListName = meta.ContainsUserName_TableList(originalTableName) ? meta.GetUserName_TableList(originalTableName) : customTableName + "s";
+                string originalTableName = table.Name;
+                string customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
+                string tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
+                string customTableListName = meta.ContainsUserName_TableList(originalTableName) ? meta.GetUserName_TableList(originalTableName) : customTableName + "s";
 
-                str.Line(1, $"#region {customTableName}");
+                str.AddLine(1, $"#region {customTableName}");
                 #region
-                str.Line();
+                str.AddLine();
 
                 if (meta.UseComments)
                 {
-                    str.LineComment(1, tableComment);
+                    str.AddComment(1, tableComment);
                 }
-                str.Line(1, $"public const string {customTableName}TableName = \"{originalTableName}\";");
-                str.Line();
+                str.AddLine(1, $"public const string {customTableName}TableName = \"{originalTableName}\";");
+                str.AddLine();
 
 
                 if (meta.UseComments)
                 {
-                    str.LineComment(1, tableComment);
+                    str.AddComment(1, tableComment);
                 }
-                str.Line(1, $"public DBQuery<{customTableName}Row> {customTableListName} => Select<{customTableName}Row>();");
-                str.Line();
+                str.AddLine(1, $"public DBQuery<{customTableName}Row> {customTableListName} => Select<{customTableName}Row>();");
+                str.AddLine();
 
                 if (meta.UseComments)
                 {
-                    str.LineComment(1, tableComment);
+                    str.AddComment(1, tableComment);
                 }
-                str.Line(1, $"internal static class {customTableName}");
-                str.Line(1, "{");
+                str.AddLine(1, $"internal static class {customTableName}");
+                str.AddLine(1, "{");
                 #region
 
-                foreach (var column in table.Columns)
+                foreach (DBColumn column in table.Columns)
                 {
-                    var originalColumnName = column.Name;
-                    var customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
+                    string originalColumnName = column.Name;
+                    string customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
 
                     InsertComment(meta, str, 2, column, true);
-                    str.Line(2, $"public const string {customColumnName} = \"{originalTableName}.{originalColumnName}\";");
-                    str.Line();
+                    str.AddLine(2, $"public const string {customColumnName} = \"{originalTableName}.{originalColumnName}\";");
+                    str.AddLine();
                 }
 
                 #endregion
-                str.Line(1, "}");
-                str.Line();
+                str.AddLine(1, "}");
+                str.AddLine();
 
                 if (meta.UseComments)
                 {
-                    str.LineComment(1, tableComment);
+                    str.AddComment(1, tableComment);
                 }
-                str.Line(1, $"[DBOrmTable({customTableName}TableName)]");
-                str.Line(1, $"public class {customTableName}Row : DBOrmRow<{customTableName}Row>");
-                str.Line(1, "{");
+                str.AddLine(1, $"[DBOrmTable({customTableName}TableName)]");
+                str.AddLine(1, $"public class {customTableName}Row : DBOrmRow<{customTableName}Row>");
+                str.AddLine(1, "{");
                 #region
 
-                foreach (var column in table.Columns)
+                foreach (DBColumn column in table.Columns)
                 {
-                    var originalColumnName = column.Name;
-                    var customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
-                    var columnTypeName = GetTypeName(column, meta);
+                    string originalColumnName = column.Name;
+                    string customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
+                    string columnTypeName = GetTypeName(column, meta);
 
-                    var notNullAttribute = "";
-                    var primaryKeyAttribute = "";
-                    var foreignKeyAttribute = "";
+                    string notNullAttribute = "";
+                    string primaryKeyAttribute = "";
+                    string foreignKeyAttribute = "";
                     #region Получение информации об атрибутах
 
                     if (column.NotNull)
@@ -101,8 +101,8 @@ namespace DbOrmModel
 
                     if (meta.ContainsForeignKey(originalTableName + "." + originalColumnName))
                     {
-                        var foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
-                        var split = foreignKey.Split('.');
+                        string foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
+                        string[] split = foreignKey.Split('.');
 
                         if (meta.ContainsUserName(split[0] + "." + split[1]))
                         {
@@ -118,111 +118,111 @@ namespace DbOrmModel
 
                     #endregion
 
-                    str.Line(2, $"#region {customColumnName}");
-                    str.Line();
+                    str.AddLine(2, $"#region {customColumnName}");
+                    str.AddLine();
 
                     InsertComment(meta, str, 2, column, false);
-                    str.Line(2, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
-                    str.LineProperty(2, $"public {columnTypeName} {customColumnName}",
+                    str.AddLine(2, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
+                    str.AddProperty(2, $"public {columnTypeName} {customColumnName}",
                         $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
                         $"Row[{customTableName}.{customColumnName}] = value;");
 
-                    str.Line();
+                    str.AddLine();
                     InsertComment(meta, str, 2, column, true);
-                    str.Line(2, $"public void Set{customColumnName}(object value)");
-                    str.Line(2, "{");
-                    str.Line(3, $"Row[{customTableName}.{customColumnName}] = value;");
-                    str.Line(2, "}");
+                    str.AddLine(2, $"public void Set{customColumnName}(object value)");
+                    str.AddLine(2, "{");
+                    str.AddLine(3, $"Row[{customTableName}.{customColumnName}] = value;");
+                    str.AddLine(2, "}");
 
-                    str.Line();
-                    str.Line(2, "#endregion");
-                    str.Line();
+                    str.AddLine();
+                    str.AddLine(2, "#endregion");
+                    str.AddLine();
                 }
 
-                str.Line(2, $"public {customTableName}Row(DBRow row) : base(row) {{ }}");
+                str.AddLine(2, $"public {customTableName}Row(DBRow row) : base(row) {{ }}");
 
                 #endregion
-                str.Line(1, "}");
+                str.AddLine(1, "}");
 
-                str.Line();
+                str.AddLine();
                 #endregion
-                str.Line(1, "#endregion");
-                str.Line();
+                str.AddLine(1, "#endregion");
+                str.AddLine();
             }
             #endregion
 
-            str.Line(1, "public DB(DBProvider provider, DbConnection connection) : base(provider, connection)");
-            str.Line(1, "{");
-            str.Line(1, "}");
+            str.AddLine(1, "public DB(DBProvider provider, DbConnection connection) : base(provider, connection)");
+            str.AddLine(1, "{");
+            str.AddLine(1, "}");
 
-            str.Line(0, "}");
+            str.AddLine(0, "}");
 
             return str.ToString();
         }
         public string CreateText_Mode1(MetaManager meta)
         {
-            var str = new StringBuilder();
+            StringBuilder str = new StringBuilder();
 
-            foreach (var table in Provider.Tables)
+            foreach (DBTable table in Provider.Tables)
             {
-                var originalTableName = table.Name;
-                var customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
-                var tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
+                string originalTableName = table.Name;
+                string customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
+                string tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
 
-                str.Line(0, $"#region {customTableName}");
+                str.AddLine(0, $"#region {customTableName}");
                 #region
-                str.Line();
+                str.AddLine();
 
                 if (meta.UseComments)
                 {
-                    str.LineComment(0, tableComment);
+                    str.AddComment(0, tableComment);
                 }
-                str.Line(0, $"public class {customTableName}Item");
-                str.Line(0, "{");
+                str.AddLine(0, $"public class {customTableName}Item");
+                str.AddLine(0, "{");
                 #region
 
-                str.Line(1, $"public DB.{customTableName}Row Row {{ get; private set; }}");
+                str.AddLine(1, $"public DB.{customTableName}Row Row {{ get; private set; }}");
 
-                str.Line(1, $"public {customTableName}Item(DB.{customTableName}Row row)");
-                str.Line(1, "{");
-                str.Line(2, "Row = row;");
-                str.Line(1, "}");
-                str.Line();
+                str.AddLine(1, $"public {customTableName}Item(DB.{customTableName}Row row)");
+                str.AddLine(1, "{");
+                str.AddLine(2, "Row = row;");
+                str.AddLine(1, "}");
+                str.AddLine();
 
-                foreach (var column in table.Columns)
+                foreach (DBColumn column in table.Columns)
                 {
-                    var originalColumnName = column.Name;
-                    var customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
-                    var columnTypeName = GetTypeName(column, meta);
+                    string originalColumnName = column.Name;
+                    string customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
+                    string columnTypeName = GetTypeName(column, meta);
 
                     InsertComment(meta, str, 1, column, false);
-                    str.LineProperty(1, $"public {columnTypeName} {customColumnName}",
+                    str.AddProperty(1, $"public {columnTypeName} {customColumnName}",
                         $"Row.{customColumnName};", null);
                 }
-                str.Line();
-                foreach (var column in table.Columns)
+                str.AddLine();
+                foreach (DBColumn column in table.Columns)
                 {
-                    var originalColumnName = column.Name;
-                    var customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
-                    var columnTypeName = GetTypeName(column, meta);
+                    string originalColumnName = column.Name;
+                    string customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
+                    string columnTypeName = GetTypeName(column, meta);
 
                     InsertComment(meta, str, 1, column, false);
-                    str.Line(1, $"public bool Set{customColumnName}(object value)");
-                    str.Line(1, "{");
-                    str.Line(2, $"Row.Set{customColumnName}(value);");
-                    str.Line(2, "return true;");
-                    str.Line(1, "}");
+                    str.AddLine(1, $"public bool Set{customColumnName}(object value)");
+                    str.AddLine(1, "{");
+                    str.AddLine(2, $"Row.Set{customColumnName}(value);");
+                    str.AddLine(2, "return true;");
+                    str.AddLine(1, "}");
                 }
 
-                str.Line();
+                str.AddLine();
 
                 #endregion
-                str.Line(0, "}");
+                str.AddLine(0, "}");
 
-                str.Line();
+                str.AddLine();
                 #endregion
-                str.Line(0, "#endregion");
-                str.Line();
+                str.AddLine(0, "#endregion");
+                str.AddLine();
             }
 
             return str.ToString();
@@ -232,9 +232,9 @@ namespace DbOrmModel
         {
             if (meta.UseComments)
             {
-                var columnName = column.Table.Name + "." + column.Name;
+                string columnName = column.Table.Name + "." + column.Name;
 
-                var comment = string.Empty;
+                string comment = string.Empty;
                 if (meta.ContainsComment(columnName))
                 {
                     comment += meta.GetComment(columnName);
@@ -245,13 +245,13 @@ namespace DbOrmModel
                 }
                 if (comment.Length > 0)
                 {
-                    str.LineComment(level, comment);
+                    str.AddComment(level, comment);
                 }
             }
         }
         private string GetCommentObjectType(DBColumn column, MetaManager meta)
         {
-            var typeName = GetTypeName(column, meta);
+            string typeName = GetTypeName(column, meta);
             if (!column.NotNull && column.DataType.IsClass)
             {
                 typeName += "?";
@@ -260,7 +260,7 @@ namespace DbOrmModel
         }
         private string GetTypeName(DBColumn column, MetaManager meta)
         {
-            var type = column.DataType;
+            System.Type type = column.DataType;
 
             string typeName;
             if (meta.ContainsDataType(column.Table.Name + "." + column.Name))

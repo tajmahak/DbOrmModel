@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this._text = new MyLibrary.WinForms.Controls.MyTextBox();
+            this._text = new MyLibrary.Win32.Controls.MyTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this._status = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -229,7 +229,7 @@
         }
 
         #endregion
-        private MyLibrary.WinForms.Controls.MyTextBox _text;
+        private MyLibrary.Win32.Controls.MyTextBox _text;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel _status;
         private System.Windows.Forms.MenuStrip menuStrip1;

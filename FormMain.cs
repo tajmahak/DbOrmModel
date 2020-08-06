@@ -1,6 +1,6 @@
 ﻿using DbOrmModel.Properties;
 using FirebirdSql.Data.FirebirdClient;
-using MyLibrary.DataBase;
+using MyLibrary.DataBase.Firebird;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -56,7 +56,7 @@ namespace DbOrmModel
         }
         private void Form_DragDrop(object sender, DragEventArgs e)
         {
-            var path = (string[])e.Data.GetData(DataFormats.FileDrop);
+            string[] path = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (path.Length == 0)
             {
                 return;
@@ -96,7 +96,7 @@ namespace DbOrmModel
 
                     if (File.Exists(MetaFilePath))
                     {
-                        var content = File.ReadAllLines(MetaFilePath);
+                        string[] content = File.ReadAllLines(MetaFilePath);
                         _metaManager.LoadInfo(_builder.Provider, content);
                     }
                     else
@@ -125,8 +125,8 @@ namespace DbOrmModel
         {
             _recentList.Clear();
 
-            var dropDownItems = недавниеФайлыToolStripMenuItem.DropDownItems;
-            for (var i = 2; i < dropDownItems.Count; i++)
+            ToolStripItemCollection dropDownItems = недавниеФайлыToolStripMenuItem.DropDownItems;
+            for (int i = 2; i < dropDownItems.Count; i++)
             {
                 dropDownItems.RemoveAt(i);
                 i--;
@@ -134,13 +134,13 @@ namespace DbOrmModel
 
             if (File.Exists(_recentFilePath))
             {
-                foreach (var item in File.ReadAllLines(_recentFilePath, Encoding.UTF8))
+                foreach (string item in File.ReadAllLines(_recentFilePath, Encoding.UTF8))
                 {
                     if (File.Exists(item))
                     {
                         _recentList.Add(item);
 
-                        var recentItem = new ToolStripMenuItem
+                        ToolStripMenuItem recentItem = new ToolStripMenuItem
                         {
                             Text = item
                         };
@@ -152,7 +152,7 @@ namespace DbOrmModel
         }
         private void AddToRecentList(string path)
         {
-            var index = _recentList.FindIndex(x => x == path);
+            int index = _recentList.FindIndex(x => x == path);
             if (index != -1)
             {
                 _recentList.RemoveAt(index);
@@ -174,7 +174,7 @@ namespace DbOrmModel
             try
             {
                 connection = CreateDataBaseConnection(databasePath);
-                var provider = new FireBirdProvider();
+                FireBirdProvider provider = new FireBirdProvider();
                 provider.Initialize(connection);
                 return new OrmModelTextBuilder(provider);
             }
@@ -192,7 +192,7 @@ namespace DbOrmModel
         }
         private DbConnection CreateDataBaseConnection(string path)
         {
-            var conBuilder = new FbConnectionStringBuilder
+            FbConnectionStringBuilder conBuilder = new FbConnectionStringBuilder
             {
                 Dialect = 3,
                 UserID = "SYSDBA",
@@ -212,7 +212,7 @@ namespace DbOrmModel
                 conBuilder.ClientLibrary = Path.GetFullPath("fbclient\\fbembed.dll");
             }
 
-            var connection = new FbConnection(conBuilder.ToString());
+            FbConnection connection = new FbConnection(conBuilder.ToString());
             try
             {
                 connection.Open();
@@ -249,7 +249,7 @@ namespace DbOrmModel
         }
         private void OpenFile_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog
+            OpenFileDialog dialog = new OpenFileDialog
             {
                 Filter = "Файлы базы данных (*.FDB)|*.FDB"
             };
@@ -265,8 +265,8 @@ namespace DbOrmModel
         }
         private void OpenRecent_Click(object sender, EventArgs e)
         {
-            var recentItem = (ToolStripMenuItem)sender;
-            var filePath = recentItem.Text;
+            ToolStripMenuItem recentItem = (ToolStripMenuItem)sender;
+            string filePath = recentItem.Text;
 
             Open(filePath);
         }
@@ -296,7 +296,7 @@ namespace DbOrmModel
                 File.Delete(MetaFilePath);
             }
 
-            var content = _metaManager.UploadInfo(_builder.Provider);
+            string[] content = _metaManager.UploadInfo(_builder.Provider);
             File.WriteAllLines(MetaFilePath, content, Encoding.UTF8);
 
             WriteStatus("Создание/обновление файлов метаданных выполнено", false);

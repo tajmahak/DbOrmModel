@@ -4,39 +4,60 @@ namespace DbOrmModel
 {
     public static class StringBuilderExtension
     {
-        public static void Line(this StringBuilder str)
+        public static void Add(this StringBuilder str, object content)
+        {
+            str.Append(content);
+        }
+        public static void AddLine(this StringBuilder str)
         {
             str.AppendLine();
         }
-        public static void Line(this StringBuilder str, int level, string text)
+        public static void AddLine(this StringBuilder str, int level, object content)
         {
-            var padding = string.Empty;
+            string padding = string.Empty;
             if (level > 0)
             {
                 padding = new string(' ', level * 4);
             }
-            str.AppendLine(padding + text);
+            str.AppendLine(padding + content);
         }
-        public static void LineProperty(this StringBuilder str, int level, string text, string getText, string setText)
+
+        public static void AddProperty(this StringBuilder str, int level, string propertyName, string getText, string setText)
         {
             if (setText == null)
             {
-                str.Line(level, text + " => " + getText);
+                str.AddLine(level, propertyName + " => " + getText);
             }
             else
             {
-                str.Line(level, text);
-                str.Line(level, "{");
-                str.Line(level + 1, "get => " + getText);
-                str.Line(level + 1, "set => " + setText);
-                str.Line(level, "}");
+                str.AddLine(level, propertyName);
+                str.AddLine(level, "{");
+                str.AddLine(level + 1, "get => " + getText);
+                str.AddLine(level + 1, "set => " + setText);
+                str.AddLine(level, "}");
             }
         }
-        public static void LineComment(this StringBuilder str, int level, string text)
+        public static void AddComment(this StringBuilder str, int level, string comment)
         {
-            str.Line(level, "/// <summary>");
-            str.Line(level, "/// " + text);
-            str.Line(level, "/// </summary>");
+            if (!string.IsNullOrEmpty(comment))
+            {
+                str.AddLine(level, "/// <summary>");
+                str.AddLine(level, "/// " + comment);
+                str.AddLine(level, "/// </summary>");
+            }
+        }
+
+        public static bool RemoveLastLine(this StringBuilder str)
+        {
+            if (str.Length >= 2)
+            {
+                if (str[str.Length - 1] == '\n' && str[str.Length - 2] == '\r')
+                {
+                    str.Remove(str.Length - 2, 2);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
