@@ -123,20 +123,7 @@ namespace DbOrmModel
         private void LoadDBProvider()
         {
             string dbPath = Path.GetFullPath(ProjectInfo.DBPath);
-            DbConnection dbConnection = null;
-            try
-            {
-                dbConnection = programModel.OpenDataBaseConnection(dbPath);
-                dbProvider = programModel.CreateDBProvider(dbConnection);
-            }
-            finally
-            {
-                if (dbConnection != null)
-                {
-                    dbConnection.Close();
-                    dbConnection.Dispose();
-                }
-            }
+            dbProvider = programModel.InitializeDBProvider(dbPath);
         }
 
         private string GetNamespaceName()

@@ -1,6 +1,7 @@
 ﻿using DbOrmModel.Properties;
 using MyLibrary.DataBase;
 using MyLibrary.DataBase.Firebird;
+using MyLibrary.DataBase.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -48,33 +49,53 @@ namespace DbOrmModel
             return new OrmModelProject(this, projectInfo);
         }
 
-        public DbConnection OpenDataBaseConnection(string path)
+        public DBProvider InitializeDBProvider(string path)
         {
-            DbConnection dbConnection;
-            if (Settings.Default.UseEmbeddedServer == 0)
-            {
-                dbConnection = FireBirdProviderFactory.CreateDefaultConnection(path, "127.0.0.1", "SYSDBA", "masterkey");
-            }
-            else
-            {
-                dbConnection = FireBirdProviderFactory.CreateEmbeddedConnection(path, "SYSDBA", "masterkey", "fbclient\\fbembed.dll");
-            }
+            DbConnection dbConnection = null;
+            DBProvider dbProvider = null;
             try
             {
-                dbConnection.Open();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Ошибка подключения к БД: " + ex.Message, ex);
-            }
-            return dbConnection;
-        }
+                string pathExtension = Path.GetExtension(path);
+                if (string.Equals(pathExtension, ".fdb", StringComparison.OrdinalIgnoreCase))
+                {
+                    // БД Firebird
+                    dbProvider = new FireBirdProvider();
+                    if (Settings.Default.UseEmbeddedServer == 0)
+                    {
+                        dbConnection = FireBirdProviderFactory.CreateDefaultConnection(path, "127.0.0.1", "SYSDBA", "masterkey");
+                    }
+                    else
+                    {
+                        dbConnection = FireBirdProviderFactory.CreateEmbeddedConnection(path, "SYSDBA", "masterkey", "fbclient\\fbembed.dll");
+                    }
+                }
+                else
+                {
+                    // БД SQLite
+                    dbProvider = new SQLiteProvider();
+                    dbConnection = SQLiteProviderFactory.CreateConnection(path);
+                }
 
-        public DBProvider CreateDBProvider(DbConnection dbConnection)
-        {
-            FireBirdProvider provider = new FireBirdProvider();
-            provider.Initialize(dbConnection);
-            return provider;
+                try
+                {
+                    dbConnection.Open();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Ошибка подключения к БД: " + ex.Message, ex);
+                }
+
+                dbProvider.Initialize(dbConnection);
+            }
+            finally
+            {
+                if (dbConnection != null)
+                {
+                    dbConnection.Close();
+                    dbConnection.Dispose();
+                }
+            }
+            return dbProvider;
         }
 
         public void CrearRecentList()

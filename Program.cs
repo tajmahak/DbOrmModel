@@ -11,9 +11,6 @@ namespace DbOrmModel
         private static void Main(string[] args)
         {
             ProgramModel = new ProgramModel();
-          
-            //!!!
-            //OrmModelProject proj = ProgramModel.CreateProject(@"D:\123.ormproj");
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
