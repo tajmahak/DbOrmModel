@@ -1,5 +1,5 @@
-﻿using MyLibrary;
-using MyLibrary.DataBase;
+﻿using MyLibrary.DataBase;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -79,7 +79,7 @@ namespace DbOrmModel
                         if (split.Length > 1)
                         {
                             item.UserName = split[1];
-                            string[] splitUserName = Data.Split(item.UserName, "/");
+                            string[] splitUserName = item.UserName.Split(new string[] { "/" }, StringSplitOptions.None);
                             if (splitUserName.Length > 1)
                             {
                                 item.UserName = splitUserName[0].Trim();
