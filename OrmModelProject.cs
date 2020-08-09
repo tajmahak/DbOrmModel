@@ -1,4 +1,5 @@
-﻿using MyLibrary.DataBase;
+﻿using MyLibrary;
+using MyLibrary.DataBase;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -8,11 +9,14 @@ namespace DbOrmModel
 {
     internal class OrmModelProject
     {
-        private const string pad = "    ";
-        private readonly ProgramModel programModel;
         public OrmModelProjectInfo ProjectInfo { get; private set; }
+        public DBTableCollection Tables => dbProvider.Tables;
+        public bool UseCustomNames { get; set; } = true;
+        public bool UseComments { get; set; } = true;
+
+        private readonly ProgramModel programModel;
         private DBProvider dbProvider;
-        private readonly MetaManager meta;
+        private readonly OrmModelProjectMetaData meta;
 
         public OrmModelProject(ProgramModel programModel, OrmModelProjectInfo projectInfo)
         {
@@ -24,21 +28,97 @@ namespace DbOrmModel
                 throw new Exception("Не указан путь к БД");
             }
 
-            meta = new MetaManager();
+            meta = new OrmModelProjectMetaData();
 
             LoadDBProvider();
 
-            LoadMetaData();
-
-            //!!!
-            meta.UseComments = true;
-            meta.UseUserNames = true;
+            UpdateMetaData();
         }
 
-        private string GetMetafilePath()
+
+        public string GetMainDBNamespace(int level)
+        {
+            StringBuilder str = new StringBuilder();
+
+            str.AddLine(level, "using MyLibrary.DataBase;");
+            str.AddLine(level, "using System;");
+            str.AddLine(level, "using System.Data.Common;");
+            str.AddLine();
+
+            str.AddLine(level, "namespace " + GetNamespaceName());
+            str.AddLine(level, "{");
+            str.AppendLine(GetMainDBClass(level + 1));
+            str.AddLine(level, "}");
+            str.RemoveLastLine();
+
+            return str.ToString();
+        }
+
+        public string GetTableItemNamespace(int level, DBTable table)
+        {
+            StringBuilder str = new StringBuilder();
+
+            str.AddLine(level, "using System;");
+            str.AddLine();
+
+            str.AddLine(level, "namespace " + GetNamespaceName());
+            str.AddLine(level, "{");
+            str.AppendLine(GetTableItemClass(level + 1, table, false));
+            str.AddLine(level, "}");
+            str.RemoveLastLine();
+
+            return str.ToString();
+        }
+
+        public string GetTableItemsNamespace(int level)
+        {
+            StringBuilder str = new StringBuilder();
+
+            str.AddLine(level, "using System;");
+            str.AddLine();
+
+            str.AddLine(level, "namespace " + GetNamespaceName());
+            str.AddLine(level, "{");
+
+            foreach (DBTable table in Tables)
+            {
+                str.AppendLine(GetTableItemClass(level + 1, table, true));
+                str.AddLine();
+            }
+            str.RemoveLastLine();
+
+            str.AddLine(level, "}");
+            str.RemoveLastLine();
+
+            return str.ToString();
+        }
+
+        public void UpdateMetaData()
+        {
+            string mfPath = GetMetafilePath();
+            string[] content = null;
+            if (File.Exists(mfPath))
+            {
+                content = File.ReadAllLines(mfPath, Encoding.UTF8);
+            }
+            else
+            {
+                content = meta.UploadInfo(dbProvider);
+            }
+            meta.LoadInfo(dbProvider, content);
+        }
+
+        public string[] UploadMetaData()
+        {
+            UpdateMetaData();
+            return meta.UploadInfo(dbProvider);
+        }
+
+        public string GetMetafilePath()
         {
             return ProjectInfo.DBPath + ".meta.txt";
         }
+
 
         private void LoadDBProvider()
         {
@@ -57,62 +137,23 @@ namespace DbOrmModel
                     dbConnection.Dispose();
                 }
             }
-
-
-
-            //FireBirdProvider provider = new FireBirdProvider();
-            //provider.Initialize(connection);
-            //return new OrmModelTextBuilder(provider);
         }
 
-        private void LoadMetaData()
+        private string GetNamespaceName()
         {
-            string mfPath = GetMetafilePath();
-            string[] content = null;
-            if (File.Exists(mfPath))
-            {
-                content = File.ReadAllLines(mfPath, Encoding.UTF8);
-            }
-            meta.LoadInfo(dbProvider, content);
+            string namespaceName = string.IsNullOrEmpty(ProjectInfo.NameSpace) ? "UnknownNamespace" : ProjectInfo.NameSpace;
+            return namespaceName;
         }
 
-
-
-        public string GetMainDBNamespace(int level)
+        private string GetMainDBClass(int level)
         {
             StringBuilder str = new StringBuilder();
 
-            str.AppendLine(GetUsingDeclaration(level));
-            str.AppendLine();
-
-            str.AddLine(level, "namespace " + GetNamespaceName());
-            str.AddLine(level, "{");
-            str.AppendLine(GetMainDBClass(level + 1));
-            str.AddLine(level, "}");
-            str.RemoveLastLine();
-
-            return str.ToString();
-        }
-
-        public string GetUsingDeclaration(int level)
-        {
-            StringBuilder str = new StringBuilder();
-            str.AddLine(level, "using MyLibrary.DataBase;");
-            str.AddLine(level, "using System;");
-            str.AddLine(level, "using System.Data.Common;");
-            str.RemoveLastLine();
-            return str.ToString();
-        }
-
-        public string GetMainDBClass(int level)
-        {
-            StringBuilder str = new StringBuilder();
             str.AddLine(level, "public class DB : DBContext");
             str.AddLine(level, "{");
 
-            foreach (DBTable table in dbProvider.Tables)
+            foreach (DBTable table in Tables)
             {
-                string tableComment = GetTableComment(table);
                 string originalTableName = GetOriginalTableName(table);
                 string customTableName = GetCustomTableName(table);
                 string customTableListName = GetCustomTableListName(table);
@@ -120,11 +161,11 @@ namespace DbOrmModel
                 str.AddLine(level + 1, "#region " + customTableName);
                 str.AddLine();
 
-                str.AddComment(level + 1, tableComment);
+                AddComment(level + 1, str, table);
                 str.AddLine(level + 1, $"public const string {customTableName}TableName = \"{originalTableName}\";");
                 str.AddLine();
 
-                str.AddComment(level + 1, tableComment);
+                AddComment(level + 1, str, table);
                 str.AddLine(level + 1, $"public DBQuery<{customTableName}Row> {customTableListName} => Select<{customTableName}Row>();");
                 str.AddLine();
 
@@ -142,12 +183,73 @@ namespace DbOrmModel
             str.AddLine(level + 1, "}");
 
             str.AddLine(level, "}");
+            str.RemoveLastLine();
+
+            return str.ToString();
+        }
+
+        private string GetTableItemClass(int level, DBTable table, bool addRegion)
+        {
+            StringBuilder str = new StringBuilder();
+
+            string customTableName = GetCustomTableName(table);
+
+            if (addRegion)
+            {
+                str.AddLine(level, $"#region {customTableName}");
+                str.AddLine();
+            }
+
+            AddComment(level, str, table);
+            str.AddLine(level, $"public class {customTableName}Item");
+            str.AddLine(level, "{");
+
+            str.AddLine(level + 1, $"public DB.{customTableName}Row Row {{ get; private set; }}");
+
+            str.AddLine(level + 1, $"public {customTableName}Item(DB.{customTableName}Row row)");
+            str.AddLine(level + 1, "{");
+            str.AddLine(level + 2, "Row = row;");
+            str.AddLine(level + 1, "}");
+            str.AddLine();
+
+            foreach (DBColumn column in table.Columns)
+            {
+                string customColumnName = GetCustomColumnName(column);
+                string columnTypeName = GetColumnTypeName(column);
+
+                AddComment(level + 1, str, column, false);
+                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
+                    $"Row.{customColumnName};", null);
+                str.AddLine();
+            }
+            str.AddLine();
+            foreach (DBColumn column in table.Columns)
+            {
+                string customColumnName = GetCustomColumnName(column);
+
+                AddComment(level + 1, str, column, false);
+                str.AddLine(level + 1, $"public bool Set{customColumnName}(object value)");
+                str.AddLine(level + 1, "{");
+                str.AddLine(level + 2, $"Row.Set{customColumnName}(value);");
+                str.AddLine(level + 2, "return true;");
+                str.AddLine(level + 1, "}");
+                str.AddLine();
+            }
+
+            str.RemoveLastLine();
+            str.AddLine(level, "}");
+
+            if (addRegion)
+            {
+                str.AddLine();
+                str.AddLine(level, "#endregion");
+            }
 
             str.RemoveLastLine();
             return str.ToString();
         }
 
-        public string GetStaticTableClass(int level, DBTable table)
+        private string GetStaticTableClass(int level, DBTable table)
         {
             StringBuilder str = new StringBuilder();
 
@@ -162,7 +264,7 @@ namespace DbOrmModel
                 string originalColumnName = GetOriginalColumnName(column);
                 string customColumnName = GetCustomColumnName(column);
 
-                AddColumnComment(level + 1, str, column, true);
+                AddComment(level + 1, str, column, true);
                 str.AddLine(level + 1, $"public const string {customColumnName} = \"{originalTableName}.{originalColumnName}\";");
                 str.AddLine();
             }
@@ -173,15 +275,14 @@ namespace DbOrmModel
             return str.ToString();
         }
 
-        public string GetTableRowClass(int level, DBTable table)
+        private string GetTableRowClass(int level, DBTable table)
         {
             StringBuilder str = new StringBuilder();
 
-            string tableComment = GetTableComment(table);
             string originalTableName = GetOriginalTableName(table);
             string customTableName = GetCustomTableName(table);
 
-            str.AddComment(level, tableComment);
+            AddComment(level, str, table);
             str.AddLine(level, $"[DBOrmTable({customTableName}TableName)]");
             str.AddLine(level, $"public class {customTableName}Row : DBOrmRow<{customTableName}Row>");
             str.AddLine(level, "{");
@@ -206,35 +307,26 @@ namespace DbOrmModel
                     primaryKeyAttribute = ", PrimaryKey: true";
                 }
 
-                if (meta.ContainsForeignKey(originalTableName + "." + originalColumnName))
+                string foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
+                if (!string.IsNullOrEmpty(foreignKey))
                 {
-                    string foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
                     string[] split = foreignKey.Split('.');
-
-                    if (meta.ContainsUserName(split[0] + "." + split[1]))
-                    {
-                        split[1] = meta.GetUserName(split[0] + "." + split[1]);
-                    }
-                    if (meta.ContainsUserName(split[0]))
-                    {
-                        split[0] = meta.GetUserName(split[0]);
-                    }
-
-                    foreignKeyAttribute = $", ForeignKey: {split[0]}.{split[1]}";
+                    string foreignCustomTableName = GetCustomTableName(split[0]);
+                    string foreignCustomColumnName = GetCustomTableName(foreignKey);
+                    foreignKeyAttribute = $", ForeignKey: {foreignCustomTableName}.{foreignCustomColumnName}";
                 }
-
 
                 str.AddLine(level + 1, $"#region {customColumnName}");
                 str.AddLine();
 
-                AddColumnComment(level + 1, str, column, false);
+                AddComment(level + 1, str, column, false);
                 str.AddLine(level + 1, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
-                str.AddProperty(level + 1, $"public {columnTypeName} {customColumnName}",
+                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
                     $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
                     $"Row[{customTableName}.{customColumnName}] = value;");
 
                 str.AddLine();
-                AddColumnComment(level + 1, str, column, true);
+                AddComment(level + 1, str, column, true);
                 str.AddLine(level + 1, $"public void Set{customColumnName}(object value)");
                 str.AddLine(level + 1, "{");
                 str.AddLine(level + 2, $"Row[{customTableName}.{customColumnName}] = value;");
@@ -254,47 +346,9 @@ namespace DbOrmModel
         }
 
 
-
-        private string GetNamespaceName()
-        {
-            string namespaceName = string.IsNullOrEmpty(ProjectInfo.NameSpace) ? "UnknownNamespace" : ProjectInfo.NameSpace;
-            return namespaceName;
-        }
-
         private string GetOriginalTableName(DBTable table)
         {
-            string originalTableName = table.Name;
-            return originalTableName;
-        }
-
-        private string GetCustomTableName(DBTable table)
-        {
-            string originalTableName = GetOriginalTableName(table);
-            string customTableName = meta.ContainsUserName(originalTableName) ? meta.GetUserName(originalTableName) : originalTableName;
-            return customTableName;
-        }
-
-        private string GetTableComment(DBTable table)
-        {
-            string originalTableName = GetOriginalTableName(table);
-            string tableComment = meta.ContainsComment(originalTableName) ? meta.GetComment(originalTableName) : string.Empty;
-            return tableComment;
-        }
-
-        private string GetCustomTableListName(DBTable table)
-        {
-            string originalTableName = GetOriginalTableName(table);
-            string customTableListName;
-            if (meta.ContainsUserName_TableList(originalTableName))
-            {
-                customTableListName = meta.GetUserName_TableList(originalTableName);
-            }
-            else
-            {
-                string customTableName = GetCustomTableName(table);
-                customTableListName = customTableName + "s";
-            }
-            return customTableListName;
+            return table.Name;
         }
 
         private string GetOriginalColumnName(DBColumn column)
@@ -302,35 +356,117 @@ namespace DbOrmModel
             return column.Name;
         }
 
+        private string GetCustomTableName(string originalTableName)
+        {
+            if (UseCustomNames)
+            {
+                string customName = meta.GetCustomName(originalTableName);
+                return string.IsNullOrEmpty(customName) ? originalTableName : customName;
+            }
+            else
+            {
+                return originalTableName;
+            }
+        }
+
+        private string GetCustomColumnName(string originalTableName, string originalColumnName)
+        {
+            if (UseCustomNames)
+            {
+                string customName = meta.GetCustomName(originalTableName + "." + originalColumnName);
+                return string.IsNullOrEmpty(customName) ? originalColumnName : customName;
+            }
+            else
+            {
+                return originalColumnName;
+            }
+        }
+
+        private string GetCustomTableName(DBTable table)
+        {
+            string originalTableName = GetOriginalTableName(table);
+            return GetCustomTableName(originalTableName);
+        }
+
         private string GetCustomColumnName(DBColumn column)
         {
-            string originalColumnName = GetOriginalColumnName(column);
             string originalTableName = GetOriginalTableName(column.Table);
-            string customColumnName = meta.ContainsUserName(originalTableName + "." + originalColumnName) ? meta.GetUserName(originalTableName + "." + originalColumnName) : originalColumnName;
-            return customColumnName;
+            string originalColumnName = GetOriginalColumnName(column);
+            return GetCustomColumnName(originalTableName, originalColumnName);
+        }
+
+        private string GetCustomTableListName(DBTable table)
+        {
+            string customTableListName = meta.GetCustomNameForList(table.Name);
+            if (string.IsNullOrEmpty(customTableListName))
+            {
+                string customName = GetCustomTableName(table);
+                if (string.IsNullOrEmpty(customName))
+                {
+                    return GetOriginalTableName(table) + "s";
+                }
+                else
+                {
+                    return customName + "s";
+                }
+            }
+            return customTableListName;
         }
 
 
 
-        private void AddColumnComment(int level, StringBuilder str, DBColumn column, bool insertTypeName)
+        private void AddComment(int level, StringBuilder str, string comment)
         {
-            if (meta.UseComments)
+            if (UseComments && !string.IsNullOrEmpty(comment))
+            {
+                str.AddLine(level, "/// <summary>");
+                str.AddLine(level, "/// " + comment);
+                str.AddLine(level, "/// </summary>");
+            }
+        }
+
+        private void AddComment(int level, StringBuilder str, DBTable table)
+        {
+            string tableComment = meta.GetComment(table.Name);
+            AddComment(level, str, tableComment);
+        }
+
+        private void AddComment(int level, StringBuilder str, DBColumn column, bool insertTypeName)
+        {
+            if (UseComments)
             {
                 string columnName = column.Table.Name + "." + column.Name;
-
-                string comment = string.Empty;
-                if (meta.ContainsComment(columnName))
-                {
-                    comment += meta.GetComment(columnName);
-                }
+                string comment = meta.GetComment(columnName);
+                comment = Data.GetNotNullValue(comment);
                 if (insertTypeName)
                 {
-                    comment += $" [{GetCommentObjectType(column)}]";
+                    string typeComment = $"[{GetCommentObjectType(column)}]";
+                    if (comment.Length > 0)
+                    {
+                        comment += " " + typeComment;
+                    }
+                    else
+                    {
+                        comment += typeComment;
+                    }
                 }
-                if (comment.Length > 0)
-                {
-                    str.AddComment(level, comment);
-                }
+                AddComment(level, str, comment);
+            }
+        }
+
+        private static void AddProperty(int level, StringBuilder str, string propertyName, string getText, string setText)
+        {
+            if (setText == null)
+            {
+                str.AddLine(level, propertyName + " => " + getText);
+            }
+            else
+            {
+                str.AddLine(level, propertyName);
+                str.AddLine(level, "{");
+                str.AddLine(level + 1, "get => " + getText);
+                str.AddLine(level + 1, "set => " + setText);
+                str.AddLine(level, "}");
             }
         }
 
@@ -346,80 +482,77 @@ namespace DbOrmModel
 
         private string GetColumnTypeName(DBColumn column)
         {
-            System.Type type = column.DataType;
-
-            string typeName;
-            if (meta.ContainsDataType(column.Table.Name + "." + column.Name))
+            Type type = column.DataType;
+            string dataType = meta.GetDataType(column.Table.Name + "." + column.Name);
+            if (string.IsNullOrEmpty(dataType))
             {
-                typeName = meta.GetDataType(column.Table.Name + "." + column.Name);
-            }
-
-            else if (type == typeof(bool))
-            {
-                typeName = "bool";
-            }
-            else if (type == typeof(byte))
-            {
-                typeName = "byte";
-            }
-            else if (type == typeof(char))
-            {
-                typeName = "char";
-            }
-            else if (type == typeof(decimal))
-            {
-                typeName = "decimal";
-            }
-            else if (type == typeof(double))
-            {
-                typeName = "double";
-            }
-            else if (type == typeof(float))
-            {
-                typeName = "float";
-            }
-            else if (type == typeof(int))
-            {
-                typeName = "int";
-            }
-            else if (type == typeof(long))
-            {
-                typeName = "long";
-            }
-            else if (type == typeof(sbyte))
-            {
-                typeName = "sbyte";
-            }
-            else if (type == typeof(short))
-            {
-                typeName = "short";
-            }
-            else if (type == typeof(string))
-            {
-                typeName = "string";
-            }
-            else if (type == typeof(uint))
-            {
-                typeName = "uint";
-            }
-            else if (type == typeof(ulong))
-            {
-                typeName = "ulong";
-            }
-            else if (type == typeof(ushort))
-            {
-                typeName = "ushort";
-            }
-            else
-            {
-                typeName = type.Name;
+                if (type == typeof(bool))
+                {
+                    dataType = "bool";
+                }
+                else if (type == typeof(byte))
+                {
+                    dataType = "byte";
+                }
+                else if (type == typeof(char))
+                {
+                    dataType = "char";
+                }
+                else if (type == typeof(decimal))
+                {
+                    dataType = "decimal";
+                }
+                else if (type == typeof(double))
+                {
+                    dataType = "double";
+                }
+                else if (type == typeof(float))
+                {
+                    dataType = "float";
+                }
+                else if (type == typeof(int))
+                {
+                    dataType = "int";
+                }
+                else if (type == typeof(long))
+                {
+                    dataType = "long";
+                }
+                else if (type == typeof(sbyte))
+                {
+                    dataType = "sbyte";
+                }
+                else if (type == typeof(short))
+                {
+                    dataType = "short";
+                }
+                else if (type == typeof(string))
+                {
+                    dataType = "string";
+                }
+                else if (type == typeof(uint))
+                {
+                    dataType = "uint";
+                }
+                else if (type == typeof(ulong))
+                {
+                    dataType = "ulong";
+                }
+                else if (type == typeof(ushort))
+                {
+                    dataType = "ushort";
+                }
+                else
+                {
+                    dataType = type.Name;
+                }
             }
 
             if (!column.NotNull && !column.DataType.IsClass)
             {
-                typeName += "?";
+                dataType += "?";
             }
-            return typeName;
+            return dataType;
         }
     }
 }

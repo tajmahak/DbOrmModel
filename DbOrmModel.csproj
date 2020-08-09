@@ -36,10 +36,6 @@
     <CodeAnalysisRuleSet>DbOrmModel.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=5.8.1.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>_libs\FirebirdSql.Data.FirebirdClient.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -48,12 +44,6 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
     <Compile Include="OrmModelProject.cs" />
     <Compile Include="FormMain.cs">
       <SubType>Form</SubType>
@@ -61,9 +51,8 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="MetaManager.cs" />
+    <Compile Include="OrmModelProjectMetaData.cs" />
     <Compile Include="OrmModelProjectInfo.cs" />
-    <Compile Include="OrmModelTextBuilder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +86,10 @@
     <ProjectReference Include="..\MyLibrary\MyLibrary.DataBase.Firebird\MyLibrary.DataBase.Firebird.csproj">
       <Project>{7c415d8a-a13f-4a1e-befc-db1645ea62ec}</Project>
       <Name>MyLibrary.DataBase.Firebird</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MyLibrary\MyLibrary.DataBase.SQLite\MyLibrary.DataBase.SQLite.csproj">
+      <Project>{e333c3e6-9566-4a8c-9c8f-00b744eac138}</Project>
+      <Name>MyLibrary.DataBase.SQLite</Name>
     </ProjectReference>
     <ProjectReference Include="..\MyLibrary\MyLibrary.DataBase\MyLibrary.DataBase.csproj">
       <Project>{5951418a-5a08-41c2-9d3f-f9c5c1defd9e}</Project>

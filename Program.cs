@@ -1,5 +1,4 @@
-﻿using MyLibrary.Data;
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace DbOrmModel
@@ -12,10 +11,13 @@ namespace DbOrmModel
         private static void Main(string[] args)
         {
             ProgramModel = new ProgramModel();
+          
+            //!!!
+            //OrmModelProject proj = ProgramModel.CreateProject(@"D:\123.ormproj");
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1(args));
+            Application.Run(new FormMain(args));
         }
     }
 }

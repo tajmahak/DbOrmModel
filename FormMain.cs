@@ -1,9 +1,4 @@
-﻿using DbOrmModel.Properties;
-using FirebirdSql.Data.FirebirdClient;
-using MyLibrary.DataBase.Firebird;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -13,301 +8,203 @@ namespace DbOrmModel
 {
     public partial class FormMain : Form
     {
-        private string MetaFilePath
-        {
-            get
-            {
-                if (_dbFilePath == null)
-                {
-                    return null;
-                }
-
-                return _dbFilePath + ".meta.txt";
-            }
-        }
-
-        private string _dbFilePath;
-        private readonly string[] _args;
-        private OrmModelTextBuilder _builder;
-        private readonly MetaManager _metaManager = new MetaManager();
-        private readonly List<string> _recentList;
-        private const string _recentFilePath = "recent.txt";
-        private const int _recentFileCount = 10;
+        private OrmModelProject currentProject;
+        private ProgramModel programModel => Program.ProgramModel;
+        private readonly string[] args;
 
         public FormMain(string[] args)
         {
-            _recentList = new List<string>();
-            _args = args;
+            this.args = args;
             InitializeComponent();
-
-            UpdateRecentList();
-            WriteStatus(string.Empty, false);
+            SetStatus(string.Empty);
+            RefreshRecentList();
         }
+
         private void Form_Shown(object sender, EventArgs e)
         {
-            if (_args.Length > 0 && File.Exists(_args[0]))
+            if (args.Length > 0)
             {
-                Open(_args[0]);
+                OpenFile(args[0]);
             }
         }
+
         private void Form_DragEnter(object sender, DragEventArgs e)
         {
             e.Effect = DragDropEffects.All;
         }
+
         private void Form_DragDrop(object sender, DragEventArgs e)
         {
-            string[] path = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (path.Length == 0)
+            string[] dropList = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (dropList.Length > 0)
             {
-                return;
-            }
-
-            Open(path[0]);
-        }
-
-        private void UpdateData()
-        {
-            if (_dbFilePath == null)
-            {
-                WriteStatus("База данных не открыта", true);
-                return;
-            }
-            Open(_dbFilePath);
-        }
-        private void Open(string databasePath)
-        {
-            if (File.Exists(databasePath))
-            {
-                WriteStatus("Загрузка базы данных...", false);
-
-                try
-                {
-                    databasePath = Path.GetFullPath(databasePath);
-                    if (databasePath != _dbFilePath)
-                    {
-                        _builder = InitializeBuilder(databasePath);
-                    }
-                    _dbFilePath = databasePath;
-                    AddToRecentList(_dbFilePath);
-
-                    _metaManager.Clear();
-                    _metaManager.UseComments = _useComments.Checked;
-                    _metaManager.UseUserNames = _useUserNames.Checked;
-
-                    if (File.Exists(MetaFilePath))
-                    {
-                        string[] content = File.ReadAllLines(MetaFilePath);
-                        _metaManager.LoadInfo(_builder.Provider, content);
-                    }
-                    else
-                    {
-                        _metaManager.LoadInfo(_builder.Provider, null);
-                    }
-
-                    if (_mode1.Checked)
-                    {
-                        _text.Text = _builder.CreateText_Mode1(_metaManager);
-                    }
-                    else
-                    {
-                        _text.Text = _builder.CreateText(_metaManager);
-                    }
-
-                    WriteStatus(_dbFilePath, false);
-                }
-                catch (Exception ex)
-                {
-                    WriteStatus(ex.Message, true);
-                }
+                OpenFile(dropList[0]);
             }
         }
-        private void UpdateRecentList()
-        {
-            _recentList.Clear();
 
-            ToolStripItemCollection dropDownItems = недавниеФайлыToolStripMenuItem.DropDownItems;
+
+        private void OpenFile(string path)
+        {
+            TryOperation(() =>
+            {
+                SetStatus("Загрузка...");
+                currentProject = programModel.CreateProject(path);
+                RefreshRecentList();
+                GetUpdatedDataFromProject();
+                SetStatus(string.Empty);
+            });
+        }
+
+        private void GetUpdatedDataFromProject()
+        {
+            currentProject.UpdateMetaData();
+            currentProject.UseComments = useCommentsMenuItem.Checked;
+            currentProject.UseCustomNames = useUserNamesMenuItem.Checked;
+            if (mode1MenuItem.Checked)
+            {
+                textBox.Text = currentProject.GetTableItemsNamespace(0);
+            }
+            else
+            {
+                textBox.Text = currentProject.GetMainDBNamespace(0);
+            }
+        }
+
+        private void RefreshRecentList()
+        {
+            ToolStripItemCollection dropDownItems = recentMenuItem.DropDownItems;
             for (int i = 2; i < dropDownItems.Count; i++)
             {
                 dropDownItems.RemoveAt(i);
                 i--;
             }
 
-            if (File.Exists(_recentFilePath))
+            foreach (string recentFile in programModel.RecentList)
             {
-                foreach (string item in File.ReadAllLines(_recentFilePath, Encoding.UTF8))
+                ToolStripMenuItem recentItem = new ToolStripMenuItem
                 {
-                    if (File.Exists(item))
-                    {
-                        _recentList.Add(item);
-
-                        ToolStripMenuItem recentItem = new ToolStripMenuItem
-                        {
-                            Text = item
-                        };
-                        recentItem.Click += new EventHandler(OpenRecent_Click);
-                        dropDownItems.Add(recentItem);
-                    }
-                }
+                    Text = recentFile
+                };
+                recentItem.Click += new EventHandler(OpenRecent_Click);
+                dropDownItems.Add(recentItem);
             }
         }
-        private void AddToRecentList(string path)
+
+        private void SetStatus(string text, bool isError = false)
         {
-            int index = _recentList.FindIndex(x => x == path);
-            if (index != -1)
-            {
-                _recentList.RemoveAt(index);
-            }
-
-            if (_recentList.Count < _recentFileCount)
-            {
-                _recentList.Insert(0, path);
-            }
-
-            File.Delete(_recentFilePath);
-            File.WriteAllLines(_recentFilePath, _recentList.ToArray(), Encoding.UTF8);
-
-            UpdateRecentList();
-        }
-        private OrmModelTextBuilder InitializeBuilder(string databasePath)
-        {
-            DbConnection connection = null;
-            try
-            {
-                connection = CreateDataBaseConnection(databasePath);
-                FireBirdProvider provider = new FireBirdProvider();
-                provider.Initialize(connection);
-                return new OrmModelTextBuilder(provider);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
-            }
-        }
-        private DbConnection CreateDataBaseConnection(string path)
-        {
-            FbConnectionStringBuilder conBuilder = new FbConnectionStringBuilder
-            {
-                Dialect = 3,
-                UserID = "SYSDBA",
-                Password = "masterkey",
-                Charset = "WIN1251",
-                Database = path
-            };
-
-            if (Settings.Default.UseEmbeddedServer == 0)
-            {
-                conBuilder.ServerType = FbServerType.Default;
-                conBuilder.DataSource = "127.0.0.1";
-            }
-            else
-            {
-                conBuilder.ServerType = FbServerType.Embedded;
-                conBuilder.ClientLibrary = Path.GetFullPath("fbclient\\fbembed.dll");
-            }
-
-            FbConnection connection = new FbConnection(conBuilder.ToString());
-            try
-            {
-                connection.Open();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Ошибка подключения к БД: " + ex.Message, ex);
-            }
-            return connection;
-        }
-        private void CopyToClipboard(string text)
-        {
-            if (text.Length == 0)
-            {
-                return;
-            }
-
-            Clipboard.SetText(text, TextDataFormat.UnicodeText);
-        }
-        private void WriteStatus(string text, bool error)
-        {
-            _status.ForeColor = error ? Color.DarkRed : Color.Black;
-            _status.Text = text;
+            status.ForeColor = isError ? Color.DarkRed : Color.Black;
+            status.Text = text;
             Application.DoEvents();
         }
 
-        private void Text_KeyDown(object sender, KeyEventArgs e)
+        private bool TryOperation(Action action)
         {
-            if (e.Control && e.KeyCode == Keys.C)
+            try
             {
-                e.Handled = e.SuppressKeyPress = true;
-                CopyToClipboard(((TextBox)sender).Text);
+                action.Invoke();
+                Application.DoEvents();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SetStatus(ex.Message, true);
+                return false;
             }
         }
+
+        private void CheckOpenProject()
+        {
+            if (currentProject == null)
+            {
+                throw new Exception("Файл/проект не открыт.");
+            }
+        }
+
+
+
         private void OpenFile_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                Filter = "Файлы базы данных (*.FDB)|*.FDB"
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                Open(dialog.FileName);
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    OpenFile(dialog.FileName);
+                }
             }
         }
-        private void UpdateFile_Click(object sender, EventArgs e)
+
+        private void Update_Click(object sender, EventArgs e)
         {
-            UpdateData();
+            TryOperation(() =>
+            {
+                CheckOpenProject();
+                GetUpdatedDataFromProject();
+            });
         }
+
         private void OpenRecent_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem recentItem = (ToolStripMenuItem)sender;
             string filePath = recentItem.Text;
 
-            Open(filePath);
+            OpenFile(filePath);
         }
+
         private void ClearRecent_Click(object sender, EventArgs e)
         {
-            File.Delete(_recentFilePath);
-            UpdateRecentList();
+            TryOperation(() =>
+            {
+                programModel.CrearRecentList();
+                RefreshRecentList();
+            });
         }
+
         private void UseComments_Click(object sender, EventArgs e)
         {
-            UpdateData();
+            if (currentProject != null)
+            {
+                GetUpdatedDataFromProject();
+            }
         }
-        private void UseUserNames_Click(object sender, EventArgs e)
+
+        private void UseCustomNames_Click(object sender, EventArgs e)
         {
-            UpdateData();
+            if (currentProject != null)
+            {
+                GetUpdatedDataFromProject();
+            }
         }
+
         private void UpdateMeta_Click(object sender, EventArgs e)
         {
-            if (_dbFilePath == null)
+            TryOperation(() =>
             {
-                WriteStatus("База данных не открыта", true);
-                return;
-            }
+                CheckOpenProject();
+                currentProject.UpdateMetaData();
+                string[] content = currentProject.UploadMetaData();
 
-            if (File.Exists(MetaFilePath))
-            {
-                File.Delete(MetaFilePath);
-            }
-
-            string[] content = _metaManager.UploadInfo(_builder.Provider);
-            File.WriteAllLines(MetaFilePath, content, Encoding.UTF8);
-
-            WriteStatus("Создание/обновление файлов метаданных выполнено", false);
+                string metafilePath = currentProject.GetMetafilePath();
+                File.Delete(metafilePath);
+                File.WriteAllLines(metafilePath, content, Encoding.UTF8);
+                SetStatus("Файл метаданных обновлён");
+            });
         }
+
         private void Mode1_Click(object sender, EventArgs e)
         {
-            UpdateData();
+            if (currentProject != null)
+            {
+                GetUpdatedDataFromProject();
+            }
         }
+
         private void Copy_Click(object sender, EventArgs e)
         {
-            CopyToClipboard(_text.Text);
+            string text = textBox.Text;
+            if (text.Length > 0)
+            {
+                Clipboard.SetText(text, TextDataFormat.UnicodeText);
+            }
         }
     }
 }
