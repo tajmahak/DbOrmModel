@@ -1,7 +1,6 @@
 ﻿using MyLibrary;
 using MyLibrary.DataBase;
 using System;
-using System.Data.Common;
 using System.IO;
 using System.Text;
 
@@ -9,15 +8,6 @@ namespace DbOrmModel
 {
     internal class OrmModelProject
     {
-        public OrmModelProjectInfo ProjectInfo { get; private set; }
-        public DBTableCollection Tables => dbProvider.Tables;
-        public bool UseCustomNames { get; set; } = true;
-        public bool UseComments { get; set; } = true;
-
-        private readonly ProgramModel programModel;
-        private DBProvider dbProvider;
-        private readonly OrmModelProjectMetaData meta;
-
         public OrmModelProject(ProgramModel programModel, OrmModelProjectInfo projectInfo)
         {
             this.programModel = programModel;
@@ -34,6 +24,15 @@ namespace DbOrmModel
 
             UpdateMetaData();
         }
+
+        public OrmModelProjectInfo ProjectInfo { get; private set; }
+        public DBTableCollection Tables => dbProvider.Tables;
+        public bool UseCustomNames { get; set; } = true;
+        public bool UseComments { get; set; } = true;
+
+        private readonly ProgramModel programModel;
+        private DBProvider dbProvider;
+        private readonly OrmModelProjectMetaData meta;
 
 
         public string GetMainDBNamespace(int level)
@@ -175,67 +174,6 @@ namespace DbOrmModel
             return str.ToString();
         }
 
-        private string GetTableItemClass(int level, DBTable table, bool addRegion)
-        {
-            StringBuilder str = new StringBuilder();
-
-            string customTableName = GetCustomTableName(table);
-
-            if (addRegion)
-            {
-                str.AddLine(level, $"#region {customTableName}");
-                str.AddLine();
-            }
-
-            AddComment(level, str, table);
-            str.AddLine(level, $"public class {customTableName}Item");
-            str.AddLine(level, "{");
-
-            str.AddLine(level + 1, $"public DB.{customTableName}Row Row {{ get; private set; }}");
-
-            str.AddLine(level + 1, $"public {customTableName}Item(DB.{customTableName}Row row)");
-            str.AddLine(level + 1, "{");
-            str.AddLine(level + 2, "Row = row;");
-            str.AddLine(level + 1, "}");
-            str.AddLine();
-
-            foreach (DBColumn column in table.Columns)
-            {
-                string customColumnName = GetCustomColumnName(column);
-                string columnTypeName = GetColumnTypeName(column);
-
-                AddComment(level + 1, str, column, false);
-                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
-                    $"Row.{customColumnName};", null);
-                str.AddLine();
-            }
-            str.AddLine();
-            foreach (DBColumn column in table.Columns)
-            {
-                string customColumnName = GetCustomColumnName(column);
-
-                AddComment(level + 1, str, column, false);
-                str.AddLine(level + 1, $"public bool Set{customColumnName}(object value)");
-                str.AddLine(level + 1, "{");
-                str.AddLine(level + 2, $"Row.Set{customColumnName}(value);");
-                str.AddLine(level + 2, "return true;");
-                str.AddLine(level + 1, "}");
-                str.AddLine();
-            }
-
-            str.RemoveLastLine();
-            str.AddLine(level, "}");
-
-            if (addRegion)
-            {
-                str.AddLine();
-                str.AddLine(level, "#endregion");
-            }
-
-            str.RemoveLastLine();
-            return str.ToString();
-        }
-
         private string GetStaticTableClass(int level, DBTable table)
         {
             StringBuilder str = new StringBuilder();
@@ -279,6 +217,7 @@ namespace DbOrmModel
                 string originalColumnName = GetOriginalColumnName(column);
                 string customColumnName = GetCustomColumnName(column);
                 string columnTypeName = GetColumnTypeName(column);
+                string foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
 
                 string notNullAttribute = "";
                 string primaryKeyAttribute = "";
@@ -294,7 +233,6 @@ namespace DbOrmModel
                     primaryKeyAttribute = ", PrimaryKey: true";
                 }
 
-                string foreignKey = meta.GetForeignKeyInfo(originalTableName + "." + originalColumnName);
                 if (!string.IsNullOrEmpty(foreignKey))
                 {
                     string[] split = foreignKey.Split('.');
@@ -303,14 +241,27 @@ namespace DbOrmModel
                     foreignKeyAttribute = $", ForeignKey: {foreignCustomTableName}.{foreignCustomColumnName}";
                 }
 
+
+
+
                 str.AddLine(level + 1, $"#region {customColumnName}");
                 str.AddLine();
 
                 AddComment(level + 1, str, column, false);
                 str.AddLine(level + 1, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
-                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
-                    $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
-                    $"Row[{customTableName}.{customColumnName}] = value;");
+
+                if (column.IsPrimary || !string.IsNullOrEmpty(foreignKey))
+                {
+                    AddProperty(level + 1, str, $"public DBID<{columnTypeName}> {customColumnName}",
+                        $"new DBID<{columnTypeName}>(Row[{customTableName}.{customColumnName}]);",
+                        $"Row[{customTableName}.{customColumnName}] = value.GetValue();");
+                }
+                else
+                {
+                    AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
+                        $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
+                        $"Row[{customTableName}.{customColumnName}] = value;");
+                }
 
                 str.AddLine();
                 AddComment(level + 1, str, column, true);
@@ -329,6 +280,68 @@ namespace DbOrmModel
             str.AddLine(level, "}");
             str.RemoveLastLine();
 
+            return str.ToString();
+        }
+
+        private string GetTableItemClass(int level, DBTable table, bool addRegion)
+        {
+            StringBuilder str = new StringBuilder();
+
+            string customTableName = GetCustomTableName(table);
+
+            if (addRegion)
+            {
+                str.AddLine(level, $"#region {customTableName}");
+                str.AddLine();
+            }
+
+            AddComment(level, str, table);
+            str.AddLine(level, $"public class {customTableName}Item");
+            str.AddLine(level, "{");
+
+            str.AddLine(level + 1, $"internal DB.{customTableName}Row Row {{ get; private set; }}");
+
+            str.AddLine(level + 1, $"public {customTableName}Item(DB.{customTableName}Row row)");
+            str.AddLine(level + 1, "{");
+            str.AddLine(level + 2, "Row = row;");
+            str.AddLine(level + 1, "}");
+            str.AddLine();
+
+            foreach (DBColumn column in table.Columns)
+            {
+                string customColumnName = GetCustomColumnName(column);
+                string columnTypeName = GetColumnTypeName(column);
+
+                AddComment(level + 1, str, column, false);
+                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
+                    $"Row.{customColumnName};", null);
+                str.AddLine();
+            }
+            str.AddLine();
+            foreach (DBColumn column in table.Columns)
+            {
+                string customColumnName = GetCustomColumnName(column);
+                string columnTypeName = GetColumnTypeName(column);
+
+                AddComment(level + 1, str, column, false);
+                str.AddLine(level + 1, $"public bool Set{customColumnName}({columnTypeName} value)");
+                str.AddLine(level + 1, "{");
+                str.AddLine(level + 2, $"Row.Set{customColumnName}(value);");
+                str.AddLine(level + 2, "return true;");
+                str.AddLine(level + 1, "}");
+                str.AddLine();
+            }
+
+            str.RemoveLastLine();
+            str.AddLine(level, "}");
+
+            if (addRegion)
+            {
+                str.AddLine();
+                str.AddLine(level, "#endregion");
+            }
+
+            str.RemoveLastLine();
             return str.ToString();
         }
 
@@ -401,7 +414,6 @@ namespace DbOrmModel
         }
 
 
-
         private void AddComment(int level, StringBuilder str, string comment)
         {
             if (UseComments && !string.IsNullOrEmpty(comment))
@@ -469,77 +481,84 @@ namespace DbOrmModel
 
         private string GetColumnTypeName(DBColumn column)
         {
-            Type type = column.DataType;
             string dataType = meta.GetDataType(column.Table.Name + "." + column.Name);
             if (string.IsNullOrEmpty(dataType))
             {
-                if (type == typeof(bool))
-                {
-                    dataType = "bool";
-                }
-                else if (type == typeof(byte))
-                {
-                    dataType = "byte";
-                }
-                else if (type == typeof(char))
-                {
-                    dataType = "char";
-                }
-                else if (type == typeof(decimal))
-                {
-                    dataType = "decimal";
-                }
-                else if (type == typeof(double))
-                {
-                    dataType = "double";
-                }
-                else if (type == typeof(float))
-                {
-                    dataType = "float";
-                }
-                else if (type == typeof(int))
-                {
-                    dataType = "int";
-                }
-                else if (type == typeof(long))
-                {
-                    dataType = "long";
-                }
-                else if (type == typeof(sbyte))
-                {
-                    dataType = "sbyte";
-                }
-                else if (type == typeof(short))
-                {
-                    dataType = "short";
-                }
-                else if (type == typeof(string))
-                {
-                    dataType = "string";
-                }
-                else if (type == typeof(uint))
-                {
-                    dataType = "uint";
-                }
-                else if (type == typeof(ulong))
-                {
-                    dataType = "ulong";
-                }
-                else if (type == typeof(ushort))
-                {
-                    dataType = "ushort";
-                }
-                else
-                {
-                    dataType = type.Name;
-                }
+                dataType = GetTypeName(column.DataType);
             }
-
             if (!column.NotNull && !column.DataType.IsClass)
             {
                 dataType += "?";
             }
             return dataType;
+        }
+
+        private string GetTypeName(Type type)
+        {
+            if (type.IsArray)
+            {
+                Type arrayType = type.GetElementType();
+                return GetTypeName(arrayType) + "[]";
+            }
+
+            if (type == typeof(bool))
+            {
+                return "bool";
+            }
+            if (type == typeof(byte))
+            {
+                return "byte";
+            }
+            if (type == typeof(char))
+            {
+                return "char";
+            }
+            if (type == typeof(decimal))
+            {
+                return "decimal";
+            }
+            if (type == typeof(double))
+            {
+                return "double";
+            }
+            if (type == typeof(float))
+            {
+                return "float";
+            }
+            if (type == typeof(int))
+            {
+                return "int";
+            }
+            if (type == typeof(long))
+            {
+                return "long";
+            }
+            if (type == typeof(sbyte))
+            {
+                return "sbyte";
+            }
+            if (type == typeof(short))
+            {
+                return "short";
+            }
+            if (type == typeof(string))
+            {
+                return "string";
+            }
+            if (type == typeof(uint))
+            {
+                return "uint";
+            }
+            if (type == typeof(ulong))
+            {
+                return "ulong";
+            }
+            if (type == typeof(ushort))
+            {
+                return "ushort";
+            }
+
+            return type.Name;
         }
     }
 }
