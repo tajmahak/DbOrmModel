@@ -241,27 +241,14 @@ namespace DbOrmModel
                     foreignKeyAttribute = $", ForeignKey: {foreignCustomTableName}.{foreignCustomColumnName}";
                 }
 
-
-
-
                 str.AddLine(level + 1, $"#region {customColumnName}");
                 str.AddLine();
 
                 AddComment(level + 1, str, column, false);
                 str.AddLine(level + 1, $"[DBOrmColumn({customTableName}.{customColumnName}{notNullAttribute}{primaryKeyAttribute}{foreignKeyAttribute})]");
-
-                if (column.IsPrimary || !string.IsNullOrEmpty(foreignKey))
-                {
-                    AddProperty(level + 1, str, $"public DBID<{columnTypeName}> {customColumnName}",
-                        $"new DBID<{columnTypeName}>(Row[{customTableName}.{customColumnName}]);",
-                        $"Row[{customTableName}.{customColumnName}] = value.GetValue();");
-                }
-                else
-                {
-                    AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
-                        $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
-                        $"Row[{customTableName}.{customColumnName}] = value;");
-                }
+                AddProperty(level + 1, str, $"public {columnTypeName} {customColumnName}",
+                    $"Row.GetValue<{columnTypeName}>({customTableName}.{customColumnName});",
+                    $"Row[{customTableName}.{customColumnName}] = value;");
 
                 str.AddLine();
                 AddComment(level + 1, str, column, true);
