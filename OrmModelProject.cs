@@ -135,7 +135,7 @@ namespace DbOrmModel
         {
             StringBuilder str = new StringBuilder();
 
-            str.AddLine(level, "public class DB : DBContext");
+            str.AddLine(level, "internal class DB : DBContext");
             str.AddLine(level, "{");
 
             foreach (DBTable table in Tables)
@@ -181,7 +181,7 @@ namespace DbOrmModel
             string originalTableName = GetOriginalTableName(table);
             string customTableName = GetCustomTableName(table);
 
-            str.AddLine(level, $"internal static class {customTableName}");
+            str.AddLine(level, $"public static class {customTableName}");
             str.AddLine(level, "{");
 
             foreach (DBColumn column in table.Columns)
@@ -286,12 +286,13 @@ namespace DbOrmModel
             str.AddLine(level, $"public class {customTableName}Item");
             str.AddLine(level, "{");
 
-            str.AddLine(level + 1, $"internal DB.{customTableName}Row Row {{ get; private set; }}");
-
-            str.AddLine(level + 1, $"public {customTableName}Item(DB.{customTableName}Row row)");
+            str.AddLine(level + 1, $"internal {customTableName}Item(DB.{customTableName}Row row)");
             str.AddLine(level + 1, "{");
             str.AddLine(level + 2, "Row = row;");
             str.AddLine(level + 1, "}");
+            str.AddLine();
+
+            str.AddLine(level + 1, $"internal DB.{customTableName}Row Row {{ get; private set; }}");
             str.AddLine();
 
             foreach (DBColumn column in table.Columns)
